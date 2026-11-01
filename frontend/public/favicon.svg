@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none">
+  <!-- IBM Carbon Inspired FleetTrack Monomark / Telematics Route Grid -->
+  <!-- v3.2.0: Teal 60 #007d79, Strict 0px border-radius, crisp geometric telemetry vector -->
+  <rect width="32" height="32" fill="#007d79"/>
+  <!-- Primary Directional Route Vector (Carbon White, 0 radius) -->
+  <path d="M16 6 L25 15 L20.5 15 L16 10.5 L11.5 15 L7 15 L16 6 Z" fill="#ffffff"/>
+  <!-- Secondary Telemetry Trail (Carbon High Contrast, 0 radius) -->
+  <path d="M16 14 L23 21 L19.5 21 L16 17.5 L12.5 21 L9 21 L16 14 Z" fill="#ffffff" fill-opacity="0.75"/>
+  <!-- Telematics Waypoint Node (Raio 0, 4x4 square) -->
+  <rect x="14" y="23" width="4" height="4" fill="#ffffff"/>
+</svg>

@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { Truck, LayoutDashboard, Package, Radio } from 'lucide-react'
+import Logo from './brand/Logo'
 
 interface SidebarProps {
   onNavigate?: () => void
@@ -16,8 +17,7 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
   return (
     <nav className="sidebar" aria-label="Navegação principal">
       <div className="logo">
-        <Truck size={24} />
-        FleetTrack
+        <Logo />
       </div>
       {links.map((l) => (
         <NavLink
