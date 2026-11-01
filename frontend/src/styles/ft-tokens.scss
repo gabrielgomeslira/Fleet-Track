@@ -32,7 +32,7 @@ $ft-teal-g10: (
   button-primary-active: #004144,
 );
 
-// Tokens semânticos próprios FleetTrack (--ft-*) por tema (DS 3.2 §3.1, §9)
+// Tokens semânticos próprios FleetTrack (--ft-*) por tema (DS 3.2 §3.1, §4.1, §9)
 :root,
 [data-theme='dark'] {
   --ft-interactive-hover: #009d9a;
@@ -42,6 +42,15 @@ $ft-teal-g10: (
   --ft-brand-mark: #007d79;
   --ft-tag-cyan-bg: #003666;
   --ft-tag-cyan-text: #82cfff;
+  --ft-tag-yellow-bg: #483c00;
+  --ft-tag-yellow-text: #f1c21b;
+  --ft-tag-yellow-border: #8a6d00;
+  --ft-chart-enroute: #33b1ff;
+  --ft-chart-stopped: #f1c21b;
+  --ft-chart-maintenance: #da1e28;
+  --ft-map-marker-enroute: #33b1ff;
+  --ft-map-marker-stopped: #f1c21b;
+  --ft-map-marker-maintenance: #da1e28;
 }
 
 [data-theme='light'] {
@@ -52,4 +61,13 @@ $ft-teal-g10: (
   --ft-brand-mark: #007d79;
   --ft-tag-cyan-bg: #bae6ff;
   --ft-tag-cyan-text: #003666;
+  --ft-tag-yellow-bg: #fcf4d6;
+  --ft-tag-yellow-text: #684e00;
+  --ft-tag-yellow-border: #f1c21b;
+  --ft-chart-enroute: #0072c3;
+  --ft-chart-stopped: #b28600;
+  --ft-chart-maintenance: #da1e28;
+  --ft-map-marker-enroute: #0072c3;
+  --ft-map-marker-stopped: #b28600;
+  --ft-map-marker-maintenance: #da1e28;
 }

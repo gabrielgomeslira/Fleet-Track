@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../api'
 import { formatarDia } from '../formatos'
+import StatusBadge from './StatusBadge'
 import type { Delivery } from '../types'
 
 const STATUSES = [
@@ -66,7 +67,7 @@ export default function DeliveriesPage() {
                 <td>{d.origin}</td>
                 <td>{d.destination}</td>
                 <td>
-                  <span className={`badge ${d.status}`}>{d.status.replace('_', ' ')}</span>
+                  <StatusBadge status={d.status} />
                 </td>
                 <td>{formatarDia(d.createdAt)}</td>
                 <td>{formatarDia(d.deliveredAt)}</td>

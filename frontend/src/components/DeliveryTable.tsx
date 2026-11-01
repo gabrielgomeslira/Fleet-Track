@@ -1,4 +1,5 @@
 import { formatarDia } from '../formatos'
+import StatusBadge from './StatusBadge'
 import type { Delivery } from '../types'
 
 interface Props {
@@ -28,7 +29,7 @@ export default function DeliveryTable({ deliveries }: Props) {
               <td>{d.origin}</td>
               <td>{d.destination}</td>
               <td>
-                <span className={`badge ${d.status}`}>{d.status.replace('_', ' ')}</span>
+                <StatusBadge status={d.status} />
               </td>
               <td>{formatarDia(d.createdAt)}</td>
             </tr>

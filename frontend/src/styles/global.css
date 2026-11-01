@@ -225,23 +225,17 @@ body {
   background: var(--bg-hover);
 }
 
-.badge {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+/* Regras legadas .badge.* substituídas por StatusBadge (Carbon Tag) - T-79
+   Mantidos aliases retrocompatíveis para em_rota e em_transito com Cyan (T-90 / R-COR) */
+.badge.em_rota {
+  background: var(--ft-tag-cyan-bg);
+  color: var(--ft-tag-cyan-text);
 }
 
-.badge.em_rota { background: var(--ft-tag-cyan-bg); color: var(--ft-tag-cyan-text); }
-.badge.parado { background: rgba(234,179,8,0.15); color: var(--yellow); }
-.badge.manutencao { background: rgba(239,68,68,0.15); color: var(--red); }
-.badge.entregue { background: rgba(34,197,94,0.15); color: var(--green); }
-.badge.em_transito { background: var(--ft-tag-cyan-bg); color: var(--ft-tag-cyan-text); }
-.badge.pendente { background: rgba(249,115,22,0.15); color: var(--orange); }
-.badge.cancelado { background: rgba(239,68,68,0.15); color: var(--red); }
+.badge.em_transito {
+  background: var(--ft-tag-cyan-bg);
+  color: var(--ft-tag-cyan-text);
+}
 
 .fleet-map {
   background: var(--bg-card);

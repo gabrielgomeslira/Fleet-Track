@@ -1,3 +1,4 @@
+import StatusBadge from './StatusBadge'
 import type { Vehicle } from '../types'
 
 interface Props {
@@ -22,12 +23,16 @@ export default function VehicleTable({ vehicles }: Props) {
         <tbody>
           {vehicles.map((v) => (
             <tr key={v.id}>
-              <td><strong>{v.plate}</strong></td>
+              <td>
+                <strong>{v.plate}</strong>
+              </td>
               <td>{v.driverName}</td>
               <td>{v.model}</td>
               <td>{v.speed.toFixed(0)} km/h</td>
               <td>{v.fuelLevel}%</td>
-              <td><span className={`badge ${v.status}`}>{v.status.replace('_', ' ')}</span></td>
+              <td>
+                <StatusBadge status={v.status} />
+              </td>
             </tr>
           ))}
         </tbody>

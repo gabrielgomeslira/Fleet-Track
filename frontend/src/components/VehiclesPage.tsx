@@ -1,4 +1,5 @@
 import { formatarHora, formatarPercentual } from '../formatos'
+import StatusBadge from './StatusBadge'
 import type { Vehicle } from '../types'
 import FleetMap from './FleetMap'
 
@@ -54,7 +55,7 @@ export default function VehiclesPage({ vehicles }: Props) {
                 </td>
                 <td>{formatarHora(v.updatedAt)}</td>
                 <td>
-                  <span className={`badge ${v.status}`}>{v.status.replace('_', ' ')}</span>
+                  <StatusBadge status={v.status} />
                 </td>
               </tr>
             ))}

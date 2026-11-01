@@ -26,3 +26,19 @@
     color: var(--ft-text-on-interactive-active);
   }
 }
+
+// Tags Carbon retangulares com raio 0 (DS §6)
+.cds--tag {
+  border-radius: 0;
+}
+
+// Suporte ao status Parado via Tag Yellow customizada (DS §4.1, §9)
+.cds--tag.ft-tag--parado {
+  background-color: var(--ft-tag-yellow-bg);
+  color: var(--ft-tag-yellow-text);
+  border: 1px solid var(--ft-tag-yellow-border);
+
+  svg {
+    fill: currentColor;
+  }
+}
