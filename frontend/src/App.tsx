@@ -45,7 +45,9 @@ export default function App() {
       try {
         await api.simulate()
         await fetchData()
-      } catch {}
+      } catch {
+        // Ignora erros na simulação periódica
+      }
     }, 5000)
     return () => clearInterval(interval)
   }, [fetchData])

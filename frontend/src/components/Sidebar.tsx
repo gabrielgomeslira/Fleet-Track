@@ -23,7 +23,7 @@ export default function Sidebar({ current, onNavigate }: Props) {
       {links.map((l) => (
         <a
           key={l.page}
-          href="#"
+          href={`#${l.page}`}
           className={current === l.page ? 'active' : ''}
           onClick={(e) => {
             e.preventDefault()
