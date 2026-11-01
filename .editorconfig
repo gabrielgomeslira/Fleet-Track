@@ -1,0 +1,51 @@
+# EditorConfig: https://editorconfig.org
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.{cs,csproj,props,targets}]
+indent_size = 4
+
+[*.sln]
+end_of_line = crlf
+indent_style = tab
+
+[*.md]
+# espaços no fim de linha podem ter significado em Markdown
+trim_trailing_whitespace = false
+
+[Makefile]
+indent_style = tab
+
+[*.cs]
+# Organização de código
+dotnet_sort_system_directives_first = true
+csharp_using_directive_placement = outside_namespace:warning
+csharp_style_namespace_declarations = file_scoped:warning
+csharp_style_var_for_built_in_types = true:silent
+csharp_style_var_when_type_is_apparent = true:silent
+csharp_style_var_elsewhere = true:silent
+
+# Nomes (padrões de engenharia, seção 5.2)
+dotnet_naming_rule.interfaces_com_i.symbols = interfaces
+dotnet_naming_rule.interfaces_com_i.style = prefixo_i
+dotnet_naming_rule.interfaces_com_i.severity = warning
+dotnet_naming_symbols.interfaces.applicable_kinds = interface
+dotnet_naming_style.prefixo_i.required_prefix = I
+dotnet_naming_style.prefixo_i.capitalization = pascal_case
+
+dotnet_naming_rule.campos_privados.symbols = campos_privados
+dotnet_naming_rule.campos_privados.style = underscore_camel
+dotnet_naming_rule.campos_privados.severity = warning
+dotnet_naming_symbols.campos_privados.applicable_kinds = field
+dotnet_naming_symbols.campos_privados.applicable_accessibilities = private, private_protected
+dotnet_naming_style.underscore_camel.required_prefix = _
+dotnet_naming_style.underscore_camel.capitalization = camel_case
+
+# As severidades dos analyzers (IDE*/CA*) entram na T-68.

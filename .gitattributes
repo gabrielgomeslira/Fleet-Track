@@ -1,0 +1,18 @@
+# Fim de linha normalizado em LF no repositório e na cópia de trabalho.
+* text=auto eol=lf
+
+# Solution do Visual Studio usa CRLF.
+*.sln text eol=crlf
+
+# Binários
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff2 binary
+
+# Arquivos gerados: diff colapsado no GitHub.
+package-lock.json -diff linguist-generated
+packages.lock.json -diff linguist-generated
+docs/api/*.json linguist-generated
