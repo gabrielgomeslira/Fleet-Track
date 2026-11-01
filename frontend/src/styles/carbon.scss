@@ -1,0 +1,19 @@
+@use '@carbon/styles/scss/config' with (
+  $css--font-face: false,
+  $use-akamai-cdn: false
+);
+@use '@carbon/styles/scss/reset';
+@use '@carbon/styles/scss/type';
+@use '@carbon/styles/scss/theme';
+@use '@carbon/styles/scss/themes';
+
+:root,
+[data-theme='dark'] {
+  @include theme.theme(themes.$g100);
+  color-scheme: dark;
+}
+
+[data-theme='light'] {
+  @include theme.theme(themes.$g10);
+  color-scheme: light;
+}
