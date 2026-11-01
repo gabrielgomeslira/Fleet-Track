@@ -1,5 +1,7 @@
 # FleetTrack - Dashboard de Frota Logistica
 
+> **Em desenvolvimento: sem autenticação até a v1.0. Não use com dados reais.**
+
 Dashboard administrativo para monitoramento de frota logistica com localizacoes de veiculos em tempo real (simulado), status de entregas e telemetria.
 
 ## Screenshots
