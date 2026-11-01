@@ -21,6 +21,8 @@
   "dependencies": {
     "@carbon/react": "1.119.0",
     "@carbon/styles": "1.118.0",
+    "@ibm/plex-mono": "2.5.0",
+    "@ibm/plex-sans": "1.1.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
