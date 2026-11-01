@@ -36,6 +36,16 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     restart: unless-stopped
+    # Mapa (ADR-0016). Use "-" e nunca ":-": com ":-" o valor vazio vira o padrao e
+    # nao ha como desligar o provedor. Nao use repasse sem valor ("- MAP_X"): com a
+    # variavel ausente o Compose remove o ENV da imagem e o envsubst deixa "${MAP_X}"
+    # literal no mapa.json. As chaves balanceadas de {fontstack} funcionam no padrao.
+    environment:
+      - MAP_TILEJSON_URL=${MAP_TILEJSON_URL-https://tiles.openfreemap.org/planet}
+      - MAP_STYLE_URL=${MAP_STYLE_URL-}
+      - MAP_CSP_ORIGINS=${MAP_CSP_ORIGINS-https://tiles.openfreemap.org}
+      - MAP_GLYPHS_URL=${MAP_GLYPHS_URL-https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf}
+      - MAP_CREDIT=${MAP_CREDIT-OpenFreeMap|https://openfreemap.org;© OpenMapTiles|https://www.openmaptiles.org/}
     ports:
       - "${FRONTEND_PORT}:80"
     depends_on:

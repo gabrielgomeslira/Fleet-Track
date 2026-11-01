@@ -1,0 +1,28 @@
+# Gerado na subida do container pelo script de template da imagem nginx
+# (/docker-entrypoint.d/20-envsubst-on-templates.sh). So as variaveis definidas
+# com ENV no Dockerfile sao trocadas; $uri, $host etc. do Nginx ficam intactos.
+server {
+    listen 80;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Configuracao do mapa (ADR-0016). Sem esta regra o try_files abaixo devolveria
+    # index.html e o front desligaria o fundo em silencio.
+    # O arquivo e gerado em NGINX_ENVSUBST_OUTPUT_DIR (/etc/nginx/conf.d); com
+    # read_only (T-32) essa pasta deve ser um tmpfs.
+    location = /config/mapa.json {
+        alias /etc/nginx/conf.d/mapa.json;
+        default_type application/json;
+        add_header Cache-Control "no-store" always;
+    }
+
+    location /api/ {
+        proxy_pass http://backend:5000/api/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}

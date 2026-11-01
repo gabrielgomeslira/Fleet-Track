@@ -1,0 +1,6 @@
+{
+  "tilejsonUrl": "${MAP_TILEJSON_URL}",
+  "glyphsUrl": "${MAP_GLYPHS_URL}",
+  "styleUrl": "${MAP_STYLE_URL}",
+  "credit": "${MAP_CREDIT}"
+}

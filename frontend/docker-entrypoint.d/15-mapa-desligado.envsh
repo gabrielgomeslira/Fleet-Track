@@ -1,0 +1,9 @@
+# .envsh: o entrypoint do nginx o le com source (precisa de x) antes do
+# 20-envsubst-on-templates.sh, no mesmo shell; por isso NAO pode usar `exit`. O envsubst nao faz condicional:
+# com o fundo desligado (TileJSON e estilo vazios), limpa glifos e credito para que
+# o /config/mapa.json nao aponte para nenhum provedor.
+if [ -z "${MAP_TILEJSON_URL}" ] && [ -z "${MAP_STYLE_URL}" ]; then
+    echo "mapa: fundo desligado (MAP_TILEJSON_URL e MAP_STYLE_URL vazias); limpando glifos e credito"
+    export MAP_GLYPHS_URL=""
+    export MAP_CREDIT=""
+fi

@@ -86,6 +86,20 @@ Para parar, use `docker compose down`. Para apagar também os dados, use `docker
 | `FRONTEND_PORT` | Porta do painel no seu computador | `3000` |
 | `CONNECTION_STRING` | Conexão da API com o banco (usa as variáveis acima) | `Host=db;Port=5432;Database=fleetdb;Username=admin;Password=...` |
 
+#### Mapa
+
+O fundo do mapa vem de um provedor externo (padrão: OpenFreeMap). **O navegador de quem usa o painel** pede os tiles direto a ele, e o provedor vê o IP e a região visualizada. Para não enviar nada a terceiros, deixe `MAP_TILEJSON_URL` e `MAP_CSP_ORIGINS` vazias: o painel segue funcionando, com os veículos sobre fundo liso. Não recompila nada; basta reiniciar o container `frontend`.
+
+| Variável | Padrão | Para que serve |
+|---|---|---|
+| `MAP_TILEJSON_URL` | `https://tiles.openfreemap.org/planet` | TileJSON no esquema OpenMapTiles. **Vazia, desliga o fundo.** |
+| `MAP_GLYPHS_URL` | `https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf` | Glifos (precisa de `Noto Sans Regular` e `Noto Sans Bold`) |
+| `MAP_STYLE_URL` | vazia | Estilo completo próprio; substitui as duas acima e não acompanha o tema |
+| `MAP_CSP_ORIGINS` | `https://tiles.openfreemap.org` | Origens em `connect-src`, separadas por espaço. Vazia se o fundo estiver desligado |
+| `MAP_CREDIT` | `OpenFreeMap\|https://openfreemap.org;© OpenMapTiles\|https://www.openmaptiles.org/` | Crédito do provedor, em pares `texto\|link` |
+
+O painel lê esses valores de `/config/mapa.json`, gerado na subida do container. Só aceita URLs `https`; se o arquivo faltar ou for inválido, o fundo fica desligado.
+
 Se a porta 5432 já estiver ocupada por outro PostgreSQL, mude `POSTGRES_PORT` (por exemplo, `55432`). A API continua falando com o banco pela rede interna do Compose.
 
 ## Como funciona

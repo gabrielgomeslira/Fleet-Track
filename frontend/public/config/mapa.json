@@ -1,0 +1,6 @@
+{
+  "tilejsonUrl": "https://tiles.openfreemap.org/planet",
+  "glyphsUrl": "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
+  "styleUrl": "",
+  "credit": "OpenFreeMap|https://openfreemap.org;© OpenMapTiles|https://www.openmaptiles.org/"
+}
