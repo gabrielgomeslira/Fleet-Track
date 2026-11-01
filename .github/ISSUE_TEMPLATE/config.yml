@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Reportar uma vulnerabilidade de segurança
+    url: https://github.com/gabrielgomeslira/Fleet-Track/security/advisories/new
+    about: Vulnerabilidades são reportadas em privado. Nunca abra issue pública. Veja o SECURITY.md.

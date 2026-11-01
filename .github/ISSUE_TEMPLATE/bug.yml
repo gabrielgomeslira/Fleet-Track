@@ -1,0 +1,44 @@
+name: Relatar um bug
+description: Algo não funciona como esperado.
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por relatar. **Não use este formulário para vulnerabilidades de segurança.** Veja o `SECURITY.md`.
+        **Não inclua dados pessoais** (nomes de motoristas, e-mails, senhas, chaves de API) em nenhum campo.
+  - type: textarea
+    id: passos
+    attributes:
+      label: Passos para reproduzir
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: Resultado esperado
+    validations:
+      required: true
+  - type: textarea
+    id: obtido
+    attributes:
+      label: Resultado obtido
+    validations:
+      required: true
+  - type: input
+    id: versao
+    attributes:
+      label: Versão, tag ou commit
+      placeholder: v0.1.0 ou hash do commit
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Remova qualquer dado pessoal e segredo antes de colar.
+      render: text

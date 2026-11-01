@@ -1,0 +1,10 @@
+# Dono padrão de todo o repositório.
+* @gabrielgomeslira
+
+# Áreas sensíveis: descomente e ajuste quando houver outros donos (decisão P10).
+# /backend/Auth/            @dono-de-seguranca
+# /backend/Migrations/      @dono-de-dados
+# /.github/workflows/       @dono-de-plataforma
+# /docker-compose.yml       @dono-de-plataforma
+# /frontend/nginx.conf      @dono-de-plataforma
+# /docs/adr/                @arquiteto
