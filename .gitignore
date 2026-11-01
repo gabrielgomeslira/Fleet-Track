@@ -2,5 +2,12 @@ node_modules/
 bin/
 obj/
 .env
+.env.*
+!.env.example
 dist/
 *.log
+tests/**/bin/
+tests/**/obj/
+*.user
+.vs/
+.idea/
