@@ -33,6 +33,20 @@ npm run typecheck
 npm run build
 ```
 
+#### Dependências do frontend
+
+Os pacotes `@carbon/*` e `@ibm/plex-*` dependem do `@ibm/telemetry-js`, que envia métricas de uso à IBM durante o `npm install`/`npm ci`. A CI e o `frontend/Dockerfile` já desligam isso. Na sua máquina, desligue antes de instalar:
+
+```bash
+export IBM_TELEMETRY_DISABLED=true            # bash
+```
+
+```powershell
+$env:IBM_TELEMETRY_DISABLED="true"            # PowerShell
+```
+
+Quem quiser pode religar a telemetria (`unset IBM_TELEMETRY_DISABLED`); o projeto não depende dela.
+
 ## 2. Estrutura de pastas
 
 `backend/` e `frontend/` ficam na raiz.
