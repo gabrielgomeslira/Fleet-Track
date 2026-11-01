@@ -9,22 +9,22 @@ Dashboard administrativo para monitoramento de frota logistica com localizacoes 
 ### Dashboard
 Visao geral com cards de estatisticas, mapa interativo da frota e graficos de entregas e status dos veiculos.
 
-![Dashboard](screenshots/dashboard.png)
+![Dashboard](docs/images/dashboard.png)
 
 ### Veiculos
 Mapa completo da frota com tabela detalhada de todos os veiculos, incluindo posicao, velocidade, combustivel e status.
 
-![Veiculos](screenshots/veiculoss.png)
+![Veiculos](docs/images/veiculos.png)
 
 ### Entregas
 Listagem de todas as entregas com filtros por status (pendente, em transito, entregue, cancelado).
 
-![Entregas](screenshots/entregas.png)
+![Entregas](docs/images/entregas.png)
 
 ### Telemetria
 Historico de telemetria por veiculo com graficos de velocidade e combustivel ao longo do tempo.
 
-![Telemetria](screenshots/telemetria.png)
+![Telemetria](docs/images/telemetria.png)
 
 ## Tecnologias
 
