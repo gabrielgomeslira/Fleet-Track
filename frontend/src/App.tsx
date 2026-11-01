@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
 import StatsCards from './components/StatsCards'
 import FleetMap from './components/FleetMap'
@@ -10,22 +11,60 @@ import VehiclesPage from './components/VehiclesPage'
 import DeliveriesPage from './components/DeliveriesPage'
 import TelemetryPage from './components/TelemetryPage'
 import { api } from './api'
-import type { Vehicle, Delivery, DashboardStats, Page } from './types'
+import type { Vehicle, Delivery, DashboardStats } from './types'
+
+export function AppContent({
+  vehicles,
+  deliveries,
+  stats,
+}: {
+  vehicles: Vehicle[]
+  deliveries: Delivery[]
+  stats: DashboardStats
+}) {
+  return (
+    <div className="layout">
+      <Sidebar />
+      <main className="main">
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <>
+                <h1>Dashboard de Frota</h1>
+                <p className="subtitle">Monitoramento em tempo real da frota logística</p>
+                <StatsCards stats={stats} />
+                <FleetMap vehicles={vehicles} />
+                <div className="charts-row">
+                  <DeliveryChart stats={stats} />
+                  <StatusChart stats={stats} />
+                </div>
+                <div className="tables-row">
+                  <VehicleTable vehicles={vehicles} />
+                  <DeliveryTable deliveries={deliveries} />
+                </div>
+              </>
+            }
+          />
+          <Route path="/vehicles" element={<VehiclesPage vehicles={vehicles} />} />
+          <Route path="/deliveries" element={<DeliveriesPage />} />
+          <Route path="/telemetry" element={<TelemetryPage vehicles={vehicles} />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+    </div>
+  )
+}
 
 export default function App() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [deliveries, setDeliveries] = useState<Delivery[]>([])
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
-  const [page, setPage] = useState<Page>('dashboard')
 
   const fetchData = useCallback(async () => {
     try {
-      const [v, d, s] = await Promise.all([
-        api.getVehicles(),
-        api.getDeliveries(),
-        api.getStats(),
-      ])
+      const [v, d, s] = await Promise.all([api.getVehicles(), api.getDeliveries(), api.getStats()])
       setVehicles(v)
       setDeliveries(d)
       setStats(s)
@@ -57,29 +96,8 @@ export default function App() {
   }
 
   return (
-    <div className="layout">
-      <Sidebar current={page} onNavigate={setPage} />
-      <main className="main">
-        {page === 'dashboard' && (
-          <>
-            <h1>Dashboard de Frota</h1>
-            <p className="subtitle">Monitoramento em tempo real da frota logística</p>
-            <StatsCards stats={stats} />
-            <FleetMap vehicles={vehicles} />
-            <div className="charts-row">
-              <DeliveryChart stats={stats} />
-              <StatusChart stats={stats} />
-            </div>
-            <div className="tables-row">
-              <VehicleTable vehicles={vehicles} />
-              <DeliveryTable deliveries={deliveries} />
-            </div>
-          </>
-        )}
-        {page === 'vehicles' && <VehiclesPage vehicles={vehicles} />}
-        {page === 'deliveries' && <DeliveriesPage />}
-        {page === 'telemetry' && <TelemetryPage vehicles={vehicles} />}
-      </main>
-    </div>
+    <BrowserRouter>
+      <AppContent vehicles={vehicles} deliveries={deliveries} stats={stats} />
+    </BrowserRouter>
   )
 }

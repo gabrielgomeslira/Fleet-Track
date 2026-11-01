@@ -31,8 +31,6 @@ export interface TelemetryRecord {
   recordedAt: string
 }
 
-export type Page = 'dashboard' | 'vehicles' | 'deliveries' | 'telemetry'
-
 export interface DashboardStats {
   totalVehicles: number
   enRoute: number
