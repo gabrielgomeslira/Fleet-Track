@@ -1,3 +1,4 @@
+import { formatarHora, formatarPercentual } from '../formatos'
 import type { Vehicle } from '../types'
 import FleetMap from './FleetMap'
 
@@ -30,7 +31,9 @@ export default function VehiclesPage({ vehicles }: Props) {
           <tbody>
             {vehicles.map((v) => (
               <tr key={v.id}>
-                <td><strong>{v.plate}</strong></td>
+                <td>
+                  <strong>{v.plate}</strong>
+                </td>
                 <td>{v.model}</td>
                 <td>{v.driverName}</td>
                 <td>{v.latitude.toFixed(4)}</td>
@@ -38,12 +41,21 @@ export default function VehiclesPage({ vehicles }: Props) {
                 <td>{v.speed.toFixed(0)} km/h</td>
                 <td>
                   <div className="fuel-bar-wrapper">
-                    <div className="fuel-bar" style={{ width: `${v.fuelLevel}%`, background: v.fuelLevel < 30 ? '#ef4444' : v.fuelLevel < 60 ? '#eab308' : '#22c55e' }} />
+                    <div
+                      className="fuel-bar"
+                      style={{
+                        width: `${v.fuelLevel}%`,
+                        background:
+                          v.fuelLevel < 30 ? '#ef4444' : v.fuelLevel < 60 ? '#eab308' : '#22c55e',
+                      }}
+                    />
                   </div>
-                  <span style={{ fontSize: '0.75rem' }}>{v.fuelLevel}%</span>
+                  <span style={{ fontSize: '0.75rem' }}>{formatarPercentual(v.fuelLevel)}</span>
                 </td>
-                <td>{new Date(v.updatedAt).toLocaleTimeString('pt-BR')}</td>
-                <td><span className={`badge ${v.status}`}>{v.status.replace('_', ' ')}</span></td>
+                <td>{formatarHora(v.updatedAt)}</td>
+                <td>
+                  <span className={`badge ${v.status}`}>{v.status.replace('_', ' ')}</span>
+                </td>
               </tr>
             ))}
           </tbody>

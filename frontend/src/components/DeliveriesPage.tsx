@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '../api'
+import { formatarDia } from '../formatos'
 import type { Delivery } from '../types'
 
 const STATUSES = [
@@ -15,7 +16,10 @@ export default function DeliveriesPage() {
   const [filter, setFilter] = useState('')
 
   useEffect(() => {
-    api.getDeliveries(filter || undefined).then(setDeliveries).catch(console.error)
+    api
+      .getDeliveries(filter || undefined)
+      .then(setDeliveries)
+      .catch(console.error)
   }, [filter])
 
   return (
@@ -35,8 +39,12 @@ export default function DeliveriesPage() {
       </div>
       <div className="table-card" style={{ marginBottom: 28 }}>
         <h3>
-          {filter ? `Entregas — ${STATUSES.find((s) => s.value === filter)?.label}` : 'Todas as Entregas'}
-          <span style={{ fontWeight: 400, color: '#9aa0b0', marginLeft: 8 }}>({deliveries.length})</span>
+          {filter
+            ? `Entregas — ${STATUSES.find((s) => s.value === filter)?.label}`
+            : 'Todas as Entregas'}
+          <span style={{ fontWeight: 400, color: '#9aa0b0', marginLeft: 8 }}>
+            ({deliveries.length})
+          </span>
         </h3>
         <table>
           <thead>
@@ -52,12 +60,16 @@ export default function DeliveriesPage() {
           <tbody>
             {deliveries.map((d) => (
               <tr key={d.id}>
-                <td><strong>{d.vehiclePlate}</strong></td>
+                <td>
+                  <strong>{d.vehiclePlate}</strong>
+                </td>
                 <td>{d.origin}</td>
                 <td>{d.destination}</td>
-                <td><span className={`badge ${d.status}`}>{d.status.replace('_', ' ')}</span></td>
-                <td>{new Date(d.createdAt).toLocaleDateString('pt-BR')}</td>
-                <td>{d.deliveredAt ? new Date(d.deliveredAt).toLocaleDateString('pt-BR') : '—'}</td>
+                <td>
+                  <span className={`badge ${d.status}`}>{d.status.replace('_', ' ')}</span>
+                </td>
+                <td>{formatarDia(d.createdAt)}</td>
+                <td>{formatarDia(d.deliveredAt)}</td>
               </tr>
             ))}
           </tbody>

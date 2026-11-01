@@ -1,4 +1,5 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import { formatarDia } from '../formatos'
 import type { DashboardStats } from '../types'
 
 interface Props {
@@ -7,7 +8,7 @@ interface Props {
 
 export default function DeliveryChart({ stats }: Props) {
   const data = stats.deliveriesPerDay.map((d) => ({
-    date: new Date(d.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+    date: formatarDia(d.date, { day: '2-digit', month: '2-digit' }),
     entregas: d.count,
   }))
 

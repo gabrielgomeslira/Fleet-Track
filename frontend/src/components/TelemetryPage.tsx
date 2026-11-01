@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react'
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from 'recharts'
 import { api } from '../api'
+import { formatarHora, formatarInstante, formatarPercentual } from '../formatos'
 import type { Vehicle, TelemetryRecord } from '../types'
 
 interface Props {
@@ -20,7 +29,7 @@ export default function TelemetryPage({ vehicles }: Props) {
   }, [selectedId])
 
   const chartData = [...records].reverse().map((r) => ({
-    time: new Date(r.recordedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+    time: formatarHora(r.recordedAt, { hour: '2-digit', minute: '2-digit' }),
     speed: Math.round(r.speed),
     fuel: r.fuelLevel,
   }))
@@ -39,28 +48,43 @@ export default function TelemetryPage({ vehicles }: Props) {
         >
           <option value="">Selecione um veículo</option>
           {vehicles.map((v) => (
-            <option key={v.id} value={v.id}>{v.plate} — {v.driverName}</option>
+            <option key={v.id} value={v.id}>
+              {v.plate} — {v.driverName}
+            </option>
           ))}
         </select>
       </div>
 
       {selected && (
-        <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', marginBottom: 20 }}>
+        <div
+          className="stats-grid"
+          style={{ gridTemplateColumns: 'repeat(4, 1fr)', marginBottom: 20 }}
+        >
           <div className="stat-card">
             <span className="label">Placa</span>
-            <span className="value" style={{ fontSize: '1.2rem' }}>{selected.plate}</span>
+            <span className="value" style={{ fontSize: '1.2rem' }}>
+              {selected.plate}
+            </span>
           </div>
           <div className="stat-card">
             <span className="label">Velocidade Atual</span>
-            <span className="value" style={{ fontSize: '1.2rem' }}>{selected.speed.toFixed(0)} km/h</span>
+            <span className="value" style={{ fontSize: '1.2rem' }}>
+              {selected.speed.toFixed(0)} km/h
+            </span>
           </div>
           <div className="stat-card">
             <span className="label">Combustível</span>
-            <span className="value" style={{ fontSize: '1.2rem' }}>{selected.fuelLevel}%</span>
+            <span className="value" style={{ fontSize: '1.2rem' }}>
+              {formatarPercentual(selected.fuelLevel)}
+            </span>
           </div>
           <div className="stat-card">
             <span className="label">Status</span>
-            <span className="value" style={{ fontSize: '1.2rem' }}><span className={`badge ${selected.status}`}>{selected.status.replace('_', ' ')}</span></span>
+            <span className="value" style={{ fontSize: '1.2rem' }}>
+              <span className={`badge ${selected.status}`}>
+                {selected.status.replace('_', ' ')}
+              </span>
+            </span>
           </div>
         </div>
       )}
@@ -74,8 +98,20 @@ export default function TelemetryPage({ vehicles }: Props) {
                 <CartesianGrid strokeDasharray="3 3" stroke="#2e3244" />
                 <XAxis dataKey="time" tick={{ fill: '#9aa0b0', fontSize: 11 }} />
                 <YAxis tick={{ fill: '#9aa0b0', fontSize: 11 }} />
-                <Tooltip contentStyle={{ background: '#222535', border: '1px solid #2e3244', borderRadius: 8 }} />
-                <Line type="monotone" dataKey="speed" stroke="#3b82f6" strokeWidth={2} dot={false} />
+                <Tooltip
+                  contentStyle={{
+                    background: '#222535',
+                    border: '1px solid #2e3244',
+                    borderRadius: 8,
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="speed"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  dot={false}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -86,7 +122,13 @@ export default function TelemetryPage({ vehicles }: Props) {
                 <CartesianGrid strokeDasharray="3 3" stroke="#2e3244" />
                 <XAxis dataKey="time" tick={{ fill: '#9aa0b0', fontSize: 11 }} />
                 <YAxis tick={{ fill: '#9aa0b0', fontSize: 11 }} domain={[0, 100]} />
-                <Tooltip contentStyle={{ background: '#222535', border: '1px solid #2e3244', borderRadius: 8 }} />
+                <Tooltip
+                  contentStyle={{
+                    background: '#222535',
+                    border: '1px solid #2e3244',
+                    borderRadius: 8,
+                  }}
+                />
                 <Line type="monotone" dataKey="fuel" stroke="#22c55e" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
@@ -110,11 +152,11 @@ export default function TelemetryPage({ vehicles }: Props) {
             <tbody>
               {records.map((r) => (
                 <tr key={r.id}>
-                  <td>{new Date(r.recordedAt).toLocaleString('pt-BR')}</td>
+                  <td>{formatarInstante(r.recordedAt)}</td>
                   <td>{r.latitude.toFixed(4)}</td>
                   <td>{r.longitude.toFixed(4)}</td>
                   <td>{r.speed.toFixed(0)} km/h</td>
-                  <td>{r.fuelLevel}%</td>
+                  <td>{formatarPercentual(r.fuelLevel)}</td>
                 </tr>
               ))}
             </tbody>

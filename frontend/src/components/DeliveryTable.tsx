@@ -1,3 +1,4 @@
+import { formatarDia } from '../formatos'
 import type { Delivery } from '../types'
 
 interface Props {
@@ -21,11 +22,15 @@ export default function DeliveryTable({ deliveries }: Props) {
         <tbody>
           {deliveries.slice(0, 10).map((d) => (
             <tr key={d.id}>
-              <td><strong>{d.vehiclePlate}</strong></td>
+              <td>
+                <strong>{d.vehiclePlate}</strong>
+              </td>
               <td>{d.origin}</td>
               <td>{d.destination}</td>
-              <td><span className={`badge ${d.status}`}>{d.status.replace('_', ' ')}</span></td>
-              <td>{new Date(d.createdAt).toLocaleDateString('pt-BR')}</td>
+              <td>
+                <span className={`badge ${d.status}`}>{d.status.replace('_', ' ')}</span>
+              </td>
+              <td>{formatarDia(d.createdAt)}</td>
             </tr>
           ))}
         </tbody>
