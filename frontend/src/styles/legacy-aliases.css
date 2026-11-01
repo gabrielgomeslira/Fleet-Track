@@ -8,7 +8,7 @@
   --text-primary: var(--cds-text-primary);
   --text-secondary: var(--cds-text-secondary);
   --accent: var(--cds-interactive);
-  --accent-hover: var(--cds-interactive-hover, #0353e9);
+  --accent-hover: var(--cds-interactive-hover);
   --green: var(--cds-support-success);
   --yellow: var(--cds-support-warning);
   --red: var(--cds-support-error);

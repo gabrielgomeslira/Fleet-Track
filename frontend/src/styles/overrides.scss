@@ -1,0 +1,28 @@
+// Tokens do botão primário Carbon por tema (DS 3.2 §9)
+:root,
+[data-theme='dark'] {
+  --cds-button-primary: #08bdba;
+  --cds-button-primary-hover: #009d9a;
+  --cds-button-primary-active: #007d79;
+}
+
+[data-theme='light'] {
+  --cds-button-primary: #007d79;
+  --cds-button-primary-hover: #005d5d;
+  --cds-button-primary-active: #004144;
+}
+
+// Texto do botão primário Carbon com acessibilidade WCAG 2.2 AA (DS 3.2 §3.1, §9)
+// Garante texto escuro #161616 no g100 (7.75:1 AAA) e branco #ffffff no g10 (4.99:1 AA)
+// Preserva text-on-color branco (#ffffff) em botões de perigo e notificações
+.cds--btn--primary {
+  color: var(--ft-text-on-interactive);
+
+  &:hover {
+    color: var(--ft-text-on-interactive);
+  }
+
+  &:active {
+    color: var(--ft-text-on-interactive-active);
+  }
+}

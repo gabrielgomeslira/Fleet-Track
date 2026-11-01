@@ -1,0 +1,55 @@
+// Mapas de sobrescrita Carbon para a paleta Teal Técnico (DS 3.2 §3, §9)
+$ft-teal-g100: (
+  interactive: #08bdba,
+  border-interactive: #08bdba,
+  link-primary: #08bdba,
+  link-primary-hover: #3ddbd9,
+  link-secondary: #3ddbd9,
+  background-brand: #08bdba,
+  icon-interactive: #08bdba,
+  highlight: #004144,
+  interactive-hover: #009d9a,
+  interactive-active: #007d79,
+  button-primary: #08bdba,
+  button-primary-hover: #009d9a,
+  button-primary-active: #007d79,
+);
+
+$ft-teal-g10: (
+  interactive: #007d79,
+  border-interactive: #007d79,
+  link-primary: #007d79,
+  link-primary-hover: #005d5d,
+  link-secondary: #005d5d,
+  background-brand: #007d79,
+  icon-interactive: #007d79,
+  highlight: #d9fbfb,
+  focus: #007d79,
+  interactive-hover: #005d5d,
+  interactive-active: #004144,
+  button-primary: #007d79,
+  button-primary-hover: #005d5d,
+  button-primary-active: #004144,
+);
+
+// Tokens semânticos próprios FleetTrack (--ft-*) por tema (DS 3.2 §3.1, §9)
+:root,
+[data-theme='dark'] {
+  --ft-interactive-hover: #009d9a;
+  --ft-interactive-active: #007d79;
+  --ft-text-on-interactive: #161616;
+  --ft-text-on-interactive-active: #ffffff;
+  --ft-brand-mark: #007d79;
+  --ft-tag-cyan-bg: #003666;
+  --ft-tag-cyan-text: #82cfff;
+}
+
+[data-theme='light'] {
+  --ft-interactive-hover: #005d5d;
+  --ft-interactive-active: #004144;
+  --ft-text-on-interactive: #ffffff;
+  --ft-text-on-interactive-active: #ffffff;
+  --ft-brand-mark: #007d79;
+  --ft-tag-cyan-bg: #bae6ff;
+  --ft-tag-cyan-text: #003666;
+}

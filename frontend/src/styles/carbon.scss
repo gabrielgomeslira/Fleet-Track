@@ -1,3 +1,4 @@
+@use 'sass:map';
 @use './fonts.scss';
 @use '@carbon/styles/scss/config' with (
   $css--font-face: false,
@@ -7,14 +8,16 @@
 @use '@carbon/styles/scss/type';
 @use '@carbon/styles/scss/theme';
 @use '@carbon/styles/scss/themes';
+@use './ft-tokens';
+@use './overrides';
 
 :root,
 [data-theme='dark'] {
-  @include theme.theme(themes.$g100);
+  @include theme.theme(map.merge(themes.$g100, ft-tokens.$ft-teal-g100));
   color-scheme: dark;
 }
 
 [data-theme='light'] {
-  @include theme.theme(themes.$g10);
+  @include theme.theme(map.merge(themes.$g10, ft-tokens.$ft-teal-g10));
   color-scheme: light;
 }

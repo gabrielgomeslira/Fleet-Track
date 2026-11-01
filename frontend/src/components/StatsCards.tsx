@@ -11,7 +11,7 @@ export default function StatsCards({ stats }: Props) {
       label: 'Total Veículos',
       value: stats.totalVehicles,
       sub: `${stats.enRoute} em rota`,
-      color: '#3b82f6',
+      color: 'var(--accent)',
       icon: Truck,
     },
     {
