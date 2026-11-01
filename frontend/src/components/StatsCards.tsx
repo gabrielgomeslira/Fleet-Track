@@ -41,7 +41,7 @@ export default function StatsCards({ stats }: Props) {
     <div className="stats-grid">
       {cards.map((c) => (
         <div key={c.label} className="stat-card">
-          <div className="icon-wrapper" style={{ background: `${c.color}20` }}>
+          <div className="icon-wrapper" style={{ background: `color-mix(in srgb, ${c.color} 12%, transparent)` }}>
             <c.icon size={20} color={c.color} />
           </div>
           <span className="label">{c.label}</span>

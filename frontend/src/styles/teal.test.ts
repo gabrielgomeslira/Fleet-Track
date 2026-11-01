@@ -7,7 +7,7 @@ import * as sass from 'sass-embedded'
 describe('Teal Technical Identity Configuration (T-90 / DS 3.2 §3, §9)', () => {
   const rootDir = process.cwd()
 
-  it('legacy-aliases.css mapeia --accent para --cds-interactive e remove fallback #0353e9', () => {
+  it('legacy-aliases.css mapeia --accent para --cds-interactive e remove fallback legado azul', () => {
     const aliasesPath = path.resolve(rootDir, 'src/styles/legacy-aliases.css')
     const content = fs.readFileSync(aliasesPath, 'utf-8')
 
@@ -16,7 +16,7 @@ describe('Teal Technical Identity Configuration (T-90 / DS 3.2 §3, §9)', () =>
     expect(content).not.toContain(['03', '53e9'].join(''))
   })
 
-  it('nenhum arquivo de código em src/ referencia a cor antiga #0353e9', () => {
+  it('nenhum arquivo de código em src/ referencia a cor azul legada', () => {
     const sourceFiles = [
       'src/main.tsx',
       'src/App.tsx',
@@ -74,12 +74,14 @@ describe('Teal Technical Identity Configuration (T-90 / DS 3.2 §3, §9)', () =>
     expect(content).not.toMatch(/\.badge\.em_transito\s*\{[^}]*var\(--accent\)/)
   })
 
-  it('StatsCards.tsx utiliza var(--accent) para o primeiro card de Total Veículos', () => {
+  it('StatsCards.tsx utiliza var(--accent) para o primeiro card de Total Veículos e color-mix para fundo translúcido', () => {
     const statsCardsPath = path.resolve(rootDir, 'src/components/StatsCards.tsx')
     const content = fs.readFileSync(statsCardsPath, 'utf-8')
 
     expect(content).toContain("color: 'var(--accent)'")
     expect(content).not.toContain("color: '#3b82f6'")
+    expect(content).toContain('color-mix(in srgb, ${c.color} 12%, transparent)')
+    expect(content).not.toContain('${c.color}20')
   })
 
   it('ft-tokens.scss define os mapas de tokens Teal g100 e g10 e variáveis --ft-*', () => {
