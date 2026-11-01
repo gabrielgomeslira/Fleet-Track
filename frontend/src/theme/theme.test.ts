@@ -1,3 +1,6 @@
+import fs from 'node:fs'
+import path from 'node:path'
+import process from 'node:process'
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import React from 'react'
@@ -200,26 +203,11 @@ describe('ThemeProvider & useTheme', () => {
 })
 
 describe('theme-init.js (lógica síncrona no head)', () => {
+  const themeInitScriptPath = path.resolve(process.cwd(), 'public/theme-init.js')
+  const themeInitScript = fs.readFileSync(themeInitScriptPath, 'utf-8')
+
   function runInitScript() {
-    const key = 'ft-theme'
-    let theme = 'dark'
-    try {
-      const stored = localStorage.getItem(key)
-      if (stored === 'light' || stored === 'dark') {
-        theme = stored
-      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-        theme = 'light'
-      } else {
-        theme = 'dark'
-      }
-    } catch {
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-        theme = 'light'
-      } else {
-        theme = 'dark'
-      }
-    }
-    document.documentElement.setAttribute('data-theme', theme)
+    window.eval(themeInitScript)
   }
 
   beforeEach(() => {
