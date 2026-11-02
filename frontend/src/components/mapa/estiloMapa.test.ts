@@ -204,6 +204,23 @@ describe('Estilo do Mapa (T-93 / ADR-0016 itens 3 e 4; DS §6)', () => {
       expect((estilo.layers[0].paint as Record<string, unknown>)['background-color']).toBe('#161616')
     })
 
+    it('falha fechada para estilo liso de contingência se config for omitida ou incompleta', () => {
+      // Sem config
+      const estiloSemConfig = estiloMapa(MAP_TOKENS_DARK)
+      expect(estiloSemConfig.sources).toEqual({})
+      expect(estiloSemConfig.glyphs).toBeUndefined()
+      expect(estiloSemConfig.layers.length).toBe(1)
+      expect(estiloSemConfig.layers[0].id).toBe('background')
+
+      // Config sem glyphsUrl
+      const estiloIncompleto = estiloMapa(MAP_TOKENS_DARK, {
+        tilejsonUrl: 'https://tiles.openfreemap.org/planet',
+      })
+      expect(estiloIncompleto.sources).toEqual({})
+      expect(estiloIncompleto.glyphs).toBeUndefined()
+      expect(estiloIncompleto.layers.length).toBe(1)
+    })
+
     it('MAP_STYLE_URL definida substitui TileJSON e glifos', () => {
       const estilo = estiloMapa(MAP_TOKENS_DARK, {
         desligado: false,

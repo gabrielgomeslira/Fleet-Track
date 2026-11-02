@@ -130,8 +130,11 @@ export function estiloMapa(tokens: MapTokens, config?: Partial<MapaConfig>): Sty
   const labelColor = resolveToken(tokens, 'label', '--ft-map-label')
   const labelHaloColor = resolveToken(tokens, 'labelHalo', '--ft-map-label-halo')
 
-  const isDesligado = Boolean(config?.desligado)
   const hasStyleUrl = Boolean(config?.styleUrl && config.styleUrl.trim() !== '')
+  const isDesligado =
+    !config ||
+    Boolean(config.desligado) ||
+    (!hasStyleUrl && (!config.tilejsonUrl || !config.glyphsUrl))
 
   // Caso 1: Fundo desligado por configuração ou falha fechada
   // Gera apenas o background liso na cor de terra, sem fazer pedidos a terceiros

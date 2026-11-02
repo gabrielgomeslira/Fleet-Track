@@ -16,6 +16,7 @@ const CONFIG_DESLIGADO: MapaConfig = {
 
 /**
  * Valida se uma string é uma URL segura que utiliza obrigatoriamente o protocolo HTTPS.
+ * Rejeita protocolos inseguros e URLs com credenciais embutidas.
  */
 export function isValidHttpsUrl(url: unknown): boolean {
   if (typeof url !== 'string') return false
@@ -23,7 +24,9 @@ export function isValidHttpsUrl(url: unknown): boolean {
   if (!trimmed.startsWith('https://')) return false
   try {
     const parsed = new URL(trimmed)
-    return parsed.protocol === 'https:'
+    if (parsed.protocol !== 'https:') return false
+    if (parsed.username !== '' || parsed.password !== '') return false
+    return true
   } catch {
     return false
   }
@@ -31,18 +34,63 @@ export function isValidHttpsUrl(url: unknown): boolean {
 
 /**
  * Valida o padrão de URL de glifos contendo templates `{fontstack}` e `{range}`.
+ * Exige placeholders obrigatórios e rejeita credenciais ou interpolações não expandidas.
  */
 export function isValidGlyphsUrl(url: unknown): boolean {
   if (typeof url !== 'string') return false
   const trimmed = url.trim()
   if (!trimmed.startsWith('https://')) return false
+  if (!trimmed.includes('{fontstack}') || !trimmed.includes('{range}') || /\$\{.*\}/.test(trimmed)) {
+    return false
+  }
   try {
     const testUrl = trimmed.replace(/\{fontstack\}/g, 'test').replace(/\{range\}/g, '0-255')
     const parsed = new URL(testUrl)
-    return parsed.protocol === 'https:'
+    if (parsed.protocol !== 'https:') return false
+    if (parsed.username !== '' || parsed.password !== '') return false
+    return true
   } catch {
     return false
   }
+}
+
+/**
+ * Sanitiza a string de créditos do mapa (pares texto|link separados por ponto e vírgula).
+ * Valida os links com isValidHttpsUrl(). Se o link for inseguro ou inválido (javascript:, http:, data:),
+ * preserva o texto do crédito sem o link, falhando fechado para a URL.
+ */
+export function sanitizarCreditoMapa(rawCredit: unknown): string {
+  if (typeof rawCredit !== 'string') return ''
+  const trimmed = rawCredit.trim()
+  if (trimmed === '') return ''
+
+  const items = trimmed.split(';')
+  const sanitizados: string[] = []
+
+  for (const item of items) {
+    const itemTrimmed = item.trim()
+    if (!itemTrimmed) continue
+
+    const pipeIndex = itemTrimmed.indexOf('|')
+    if (pipeIndex === -1) {
+      sanitizados.push(itemTrimmed)
+      continue
+    }
+
+    const texto = itemTrimmed.slice(0, pipeIndex).trim()
+    const link = itemTrimmed.slice(pipeIndex + 1).trim()
+
+    if (!texto) continue
+
+    if (isValidHttpsUrl(link)) {
+      sanitizados.push(`${texto}|${link}`)
+    } else {
+      // O texto do crédito continua aparecendo se o link for inválido, sem o link
+      sanitizados.push(texto)
+    }
+  }
+
+  return sanitizados.join(';')
 }
 
 /**
@@ -59,7 +107,7 @@ export function validarConfigMapa(data: unknown): MapaConfig {
   }
 
   const record = data as Record<string, unknown>
-  const credit = typeof record.credit === 'string' ? record.credit.trim() : ''
+  const credit = sanitizarCreditoMapa(record.credit)
 
   // 1. MAP_STYLE_URL: estilo completo definido por quem instala (substitui TileJSON e glifos)
   const rawStyleUrl = typeof record.styleUrl === 'string' ? record.styleUrl.trim() : ''
