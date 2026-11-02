@@ -25,6 +25,7 @@ export default function FleetMap({ vehicles, deliveries = [] }: Props) {
   const [estadoFundo, setEstadoFundo] = useState<EstadoFundo>('carregando')
   const [config, setConfig] = useState<MapaConfig | null>(null)
   const [webGlSuportado, setWebGlSuportado] = useState(true)
+  const [mapaPronto, setMapaPronto] = useState(false)
 
   const themeTokens = useThemeTokens()
   const mapTokens = useMemo(() => toMapTokens(themeTokens), [themeTokens])
@@ -90,9 +91,11 @@ export default function FleetMap({ vehicles, deliveries = [] }: Props) {
     })
 
     mapRef.current = map
+    setMapaPronto(true)
     const marcadoresAtuais = marcadoresRef.current
 
     return () => {
+      setMapaPronto(false)
       marcadoresAtuais.forEach(({ marcador, popup }) => {
         popup.fechar()
         marcador.remover()
@@ -115,7 +118,7 @@ export default function FleetMap({ vehicles, deliveries = [] }: Props) {
     } catch {
       // Ignora falha de diff se mapa ainda não estiver pronto
     }
-  }, [mapTokens, config])
+  }, [mapTokens, config, mapaPronto])
 
   // Função para navegar entre marcadores com Tab
   const handleTabOut = useCallback((veiculoId: string, direction: 'next' | 'prev') => {
@@ -220,7 +223,7 @@ export default function FleetMap({ vehicles, deliveries = [] }: Props) {
         marcadoresRef.current.delete(id)
       }
     })
-  }, [vehicles, deliveries, handleTabOut])
+  }, [vehicles, deliveries, handleTabOut, mapaPronto])
 
   return (
     <div

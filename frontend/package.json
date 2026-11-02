@@ -16,7 +16,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:layout": "node scripts/test-map-layout.mjs"
   },
   "dependencies": {
     "@carbon/react": "1.119.0",
