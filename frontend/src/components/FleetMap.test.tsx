@@ -279,6 +279,55 @@ describe('FleetMap (T-81 / T-94 / ADR-0016 / H-22)', () => {
     )
   })
 
+  it('quando MAP_STYLE_URL estiver configurada, passa a URL externa ao MapLibre e trata falha com retry via setStyle', async () => {
+    const mockStyleUrl = 'https://mapas.empresa.com.br/estilo.json'
+    vi.spyOn(MapaUtils, 'isWebGlSupported').mockReturnValue(true)
+    vi.spyOn(ConfigMapa, 'carregarConfigMapa').mockResolvedValue({
+      desligado: false,
+      tilejsonUrl: '',
+      glyphsUrl: '',
+      styleUrl: mockStyleUrl,
+      credit: 'OpenFreeMap|https://openfreemap.org',
+    })
+
+    const { Map: MockMap } = await import('maplibre-gl')
+
+    render(<FleetMap vehicles={mockVehicles} deliveries={mockDeliveries} />)
+
+    await waitFor(() => {
+      expect(lastCreatedMapInstance).not.toBeNull()
+      expect(MockMap).toHaveBeenCalledWith(
+        expect.objectContaining({
+          style: mockStyleUrl,
+        }),
+      )
+    })
+
+    // Simula erro de busca do estilo externo
+    act(() => {
+      const errorHandlers = mapEventHandlers['error'] || []
+      errorHandlers.forEach((handler) =>
+        handler({ dataType: 'style', error: new Error('Falha ao carregar estilo remoto') }),
+      )
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('fleet-map').getAttribute('data-estado-fundo')).toBe('falha')
+    })
+
+    expect(screen.getByText('Mapa de fundo indisponível.')).toBeDefined()
+    const botaoRetry = screen.getByRole('button', { name: /Tentar de novo/i })
+    expect(botaoRetry).not.toBeNull()
+
+    // Clica em retry e verifica que setStyle é chamado com a URL e diff: false
+    act(() => {
+      fireEvent.click(botaoRetry)
+    })
+    expect(lastCreatedMapInstance!.setStyle).toHaveBeenCalledWith(mockStyleUrl, {
+      diff: false,
+    })
+  })
+
   it('filtra veículos com latitude e longitude nulas sem criar marcador no mapa', async () => {
     vi.spyOn(MapaUtils, 'isWebGlSupported').mockReturnValue(true)
     vi.spyOn(ConfigMapa, 'carregarConfigMapa').mockResolvedValue({

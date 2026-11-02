@@ -148,6 +148,35 @@ export function formatarDia(
 }
 
 /**
+ * Formata a data de conclusão de uma entrega para a coluna "Entregue em".
+ *
+ * Regras (ADR-0020 / Correções de Entregas):
+ * - Se `deliveredAt` estiver presente e for data válida -> formata com formatarDia(deliveredAt, opcoes).
+ * - Se a entrega for aberta ('pendente' ou 'em_transito') ou cancelada ('cancelado' ou 'cancelada')
+ *   sem data de entrega -> '—' (em-dash), pois a entrega ainda não terminou ou não foi concluída.
+ * - Se a entrega tiver status 'entregue' (concluída) mas a data de entrega estiver ausente/nula -> 'sem dado',
+ *   pois aqui o dado realmente falta.
+ * - Outros casos sem data válida -> 'sem dado'.
+ */
+export function formatarEntregueEm(
+  deliveredAt?: string | number | Date | null,
+  status?: string | null,
+  opcoes?: Intl.DateTimeFormatOptions,
+): string {
+  const diaFormatado = formatarDia(deliveredAt, opcoes)
+  if (diaFormatado !== SEM_DADO) {
+    return diaFormatado
+  }
+
+  const s = status ? status.trim().toLowerCase() : ''
+  if (s === 'pendente' || s === 'em_transito' || s === 'cancelado' || s === 'cancelada') {
+    return '—'
+  }
+
+  return SEM_DADO
+}
+
+/**
  * Formata percentual com valor arredondado para inteiro (ex: 75%).
  * Inválido ou ausente -> "sem dado".
  */

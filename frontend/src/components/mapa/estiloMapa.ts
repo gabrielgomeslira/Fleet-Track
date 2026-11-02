@@ -118,9 +118,20 @@ function resolveToken(tokens: MapTokens, key: keyof MapTokens, fallbackVarName?:
  * - Tipografia Noto Sans.
  * - Respeita lista estrita de camadas e filtros do ADR-0016.
  * - Falha fechada / Fundo desligado gera apenas camada de fundo liso sem fontes externas.
- * - MAP_STYLE_URL substitui TileJSON e glifos.
+ * - MAP_STYLE_URL substitui TileJSON e glifos e devolve a URL para carregamento direto pelo MapLibre.
  */
-export function estiloMapa(tokens: MapTokens, config?: Partial<MapaConfig>): StyleSpecification {
+export function estiloMapa(
+  tokens: MapTokens,
+  config: { styleUrl: `${string}://${string}` } & Partial<MapaConfig>,
+): StyleSpecification | string
+export function estiloMapa(
+  tokens: MapTokens,
+  config?: Partial<MapaConfig>,
+): StyleSpecification
+export function estiloMapa(
+  tokens: MapTokens,
+  config?: Partial<MapaConfig>,
+): StyleSpecification | string {
   const landColor = resolveToken(tokens, 'land', '--ft-map-land')
   const waterColor = resolveToken(tokens, 'water', '--ft-map-water')
   const boundaryColor = resolveToken(tokens, 'boundary', '--ft-map-boundary')
@@ -155,21 +166,9 @@ export function estiloMapa(tokens: MapTokens, config?: Partial<MapaConfig>): Sty
   }
 
   // Caso 2: MAP_STYLE_URL definida (substitui TileJSON e glifos)
-  // O estilo externo será carregado diretamente pelo MapLibre via URL
+  // O estilo externo é carregado diretamente pelo MapLibre via URL (ADR-0016 §2 e §11)
   if (hasStyleUrl) {
-    return {
-      version: 8,
-      name: 'FleetTrack Estilo Customizado',
-      transition: { duration: 0, delay: 0 },
-      sources: {},
-      layers: [
-        {
-          id: 'background',
-          type: 'background',
-          paint: { 'background-color': landColor },
-        },
-      ],
-    }
+    return config!.styleUrl!.trim()
   }
 
   const tilejsonUrl = config?.tilejsonUrl || ''

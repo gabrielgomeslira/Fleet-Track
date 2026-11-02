@@ -162,9 +162,10 @@ export default function FleetMap({ vehicles, deliveries = [] }: Props) {
     })
 
     map.on('error', (e) => {
-      const errEvent = e as { sourceId?: string; error?: unknown }
+      const errEvent = e as { sourceId?: string; error?: unknown; dataType?: string }
       maquina.notificarErro({
         sourceId: errEvent.sourceId,
+        dataType: errEvent.dataType,
         status: extrairStatusErro(e),
         error: errEvent.error,
       })
@@ -224,6 +225,9 @@ export default function FleetMap({ vehicles, deliveries = [] }: Props) {
   useEffect(() => {
     const map = mapRef.current
     if (!map || !config) return
+
+    // MAP_STYLE_URL substitui TileJSON e glifos e não acompanha o tema (ADR-0016 §2 e §11)
+    if (config.styleUrl && config.styleUrl.trim() !== '') return
 
     try {
       const novoEstilo = estiloMapa(mapTokens, config)

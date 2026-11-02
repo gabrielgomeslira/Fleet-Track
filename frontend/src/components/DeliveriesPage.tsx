@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '../api'
-import { formatarDia } from '../formatos'
+import { formatarDia, formatarEntregueEm } from '../formatos'
 import StatusBadge from './StatusBadge'
 import type { Delivery } from '../types'
 
@@ -70,7 +70,7 @@ export default function DeliveriesPage() {
                   <StatusBadge status={d.status} />
                 </td>
                 <td>{formatarDia(d.createdAt)}</td>
-                <td>{formatarDia(d.deliveredAt)}</td>
+                <td>{formatarEntregueEm(d.deliveredAt, d.status)}</td>
               </tr>
             ))}
           </tbody>

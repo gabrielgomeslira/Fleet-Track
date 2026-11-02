@@ -187,6 +187,9 @@ const DEMO_VEHICLES = [
   },
 ]
 
+// Tile vetorial mock PBF codificado contendo feição válida na camada 'water' (34 bytes)
+const MOCK_TILE_PBF_BASE64 = 'GiIKBXdhdGVyeAIogCASFAgBGAMiDgkAABqAQAAAgED/PwAP'
+
 let fundoAtivo = false
 
 const server = http.createServer((req, res) => {
@@ -203,18 +206,18 @@ const server = http.createServer((req, res) => {
   if (pathname === '/config/mapa.json') {
     res.writeHead(200, { 'Content-Type': 'application/json' })
     if (fundoAtivo) {
-      // Com fundo: styleUrl HTTPS que o MapLibre carrega sem chamar provedor externo
+      // Com fundo: URLs do provedor OpenFreeMap, interceptadas localmente via CDP (zero chamadas externas)
       res.end(
         JSON.stringify({
           desligado: false,
-          tilejsonUrl: '',
-          glyphsUrl: '',
-          styleUrl: `https://127.0.0.1:${PORT}/mock-style.json`,
-          credit: 'OpenFreeMap|https://openfreemap.org',
+          tilejsonUrl: 'https://tiles.openfreemap.org/planet',
+          glyphsUrl: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
+          styleUrl: '',
+          credit: 'OpenFreeMap|https://openfreemap.org;© OpenMapTiles|https://www.openmaptiles.org/',
         }),
       )
     } else {
-      // Sem fundo: contingência pura desligada
+      // Sem fundo: contingência pura desligada (0 fontes de dados)
       res.end(
         JSON.stringify({
           desligado: true,
@@ -337,25 +340,107 @@ server.listen(PORT, async () => {
         callbacks.get(msg.id)(msg)
         callbacks.delete(msg.id)
       }
+
+      if (msg.method === 'Target.attachedToTarget') {
+        sendCommand(
+          'Fetch.enable',
+          { patterns: [{ urlPattern: '*tiles.openfreemap.org*' }] },
+          msg.params.sessionId,
+        )
+      }
+
+      if (msg.method === 'Fetch.requestPaused') {
+        const url = msg.params.request.url
+        const reqId = msg.params.requestId
+        const sessId = msg.sessionId
+
+        if (url.includes('tiles.openfreemap.org') && url.includes('/planet') && !url.includes('.pbf')) {
+          // TileJSON local mock
+          const tileJsonBody = Buffer.from(
+            JSON.stringify({
+              tilejson: '3.0.0',
+              name: 'openfreemap',
+              tiles: ['https://tiles.openfreemap.org/planet/20261025_080012_pt/{z}/{x}/{y}.pbf'],
+              minzoom: 0,
+              maxzoom: 14,
+              bounds: [-180, -85.0511, 180, 85.0511],
+            }),
+          ).toString('base64')
+          sendCommand(
+            'Fetch.fulfillRequest',
+            {
+              requestId: reqId,
+              responseCode: 200,
+              responseHeaders: [
+                { name: 'Content-Type', value: 'application/json' },
+                { name: 'Access-Control-Allow-Origin', value: '*' },
+              ],
+              body: tileJsonBody,
+            },
+            sessId,
+          )
+        } else if (url.includes('tiles.openfreemap.org') && url.includes('/fonts/')) {
+          // Glifos vazios mock (200 OK sem conteúdo de glifo)
+          sendCommand(
+            'Fetch.fulfillRequest',
+            {
+              requestId: reqId,
+              responseCode: 200,
+              responseHeaders: [
+                { name: 'Content-Type', value: 'application/x-protobuf' },
+                { name: 'Access-Control-Allow-Origin', value: '*' },
+              ],
+              body: '',
+            },
+            sessId,
+          )
+        } else if (url.includes('tiles.openfreemap.org') && url.endsWith('.pbf')) {
+          // Tile vetorial mock com geometria válida na camada water
+          sendCommand(
+            'Fetch.fulfillRequest',
+            {
+              requestId: reqId,
+              responseCode: 200,
+              responseHeaders: [
+                { name: 'Content-Type', value: 'application/x-protobuf' },
+                { name: 'Access-Control-Allow-Origin', value: '*' },
+              ],
+              body: MOCK_TILE_PBF_BASE64,
+            },
+            sessId,
+          )
+        } else {
+          sendCommand('Fetch.continueRequest', { requestId: reqId }, sessId)
+        }
+      }
     }
 
-    function sendCommand(method, params = {}) {
+    function sendCommand(method, params = {}, sessionId) {
       return new Promise((resolve) => {
         const cmdId = id++
         callbacks.set(cmdId, resolve)
-        ws.send(JSON.stringify({ id: cmdId, method, params }))
+        const payload = { id: cmdId, method, params }
+        if (sessionId) payload.sessionId = sessionId
+        ws.send(JSON.stringify(payload))
       })
     }
 
+    await sendCommand('Target.setAutoAttach', {
+      autoAttach: true,
+      waitForDebuggerOnStart: false,
+      flatten: true,
+    })
+    await sendCommand('Fetch.enable', { patterns: [{ urlPattern: '*tiles.openfreemap.org*' }] })
     await sendCommand('Page.enable')
     await sendCommand('Runtime.enable')
 
-    async function aguardarMapaPronto() {
+    async function aguardarMapaPronto(comFundo = false) {
       for (let i = 0; i < 40; i++) {
         await new Promise((r) => setTimeout(r, 200))
         const res = await sendCommand('Runtime.evaluate', {
-          expression:
-            'Boolean(window.__fleetMap && document.querySelectorAll(".ft-map-marker").length === 10)',
+          expression: comFundo
+            ? 'Boolean(window.__fleetMap && window.__fleetMap.isSourceLoaded && window.__fleetMap.isSourceLoaded("base") && document.querySelectorAll(".ft-map-marker").length === 10)'
+            : 'Boolean(window.__fleetMap && document.querySelectorAll(".ft-map-marker").length === 10)',
           returnByValue: true,
         })
         if (res.result?.result?.value) return true
@@ -363,7 +448,7 @@ server.listen(PORT, async () => {
       return false
     }
 
-    const mapaInicializado = await aguardarMapaPronto()
+    const mapaInicializado = await aguardarMapaPronto(false)
     if (!mapaInicializado) {
       console.error('Falha ao inicializar o mapa com os 10 veículos.')
       allPassed = false
@@ -387,7 +472,7 @@ server.listen(PORT, async () => {
       // Configura modo de fundo no servidor e recarrega a página para instanciar mapa com o novo config
       await fetch(`http://127.0.0.1:${PORT}/test-control/set-fundo?ativo=${fundo.ativo}`)
       await sendCommand('Page.reload', { ignoreCache: true })
-      await aguardarMapaPronto()
+      await aguardarMapaPronto(fundo.ativo)
 
       for (const vp of viewports) {
         for (const th of themes) {
@@ -492,11 +577,74 @@ server.listen(PORT, async () => {
           const markersPosOk = Boolean(val?.allMarkersOk)
           const markersInsideOk = Boolean(val?.allMarkersInside)
 
-          if (!heightOk || !markersCountOk || !markersPosOk || !markersInsideOk) {
+          // 0. Verificação do fundo cartográfico e das fontes de dados (ADR-0016 / Defeito 2)
+          const resFundo = await sendCommand('Runtime.evaluate', {
+            expression: `JSON.stringify((() => {
+              const map = window.__fleetMap;
+              if (!map) return { error: 'Mapa ausente' };
+              const style = map.getStyle ? map.getStyle() : null;
+              const sources = style ? Object.keys(style.sources || {}) : [];
+              const layers = style ? (style.layers || []) : [];
+              const isBaseLoaded = typeof map.isSourceLoaded === 'function' ? map.isSourceLoaded('base') : false;
+              const isLoaded = typeof map.loaded === 'function' ? map.loaded() : false;
+              const estadoFundo = document.querySelector('.fleet-map')?.getAttribute('data-estado-fundo') || '';
+              return {
+                sources,
+                sourceCount: sources.length,
+                layerCount: layers.length,
+                isBaseLoaded,
+                isLoaded,
+                estadoFundo,
+              };
+            })())`,
+            returnByValue: true,
+          })
+
+          let valFundo = null
+          try {
+            valFundo =
+              typeof resFundo.result?.result?.value === 'string'
+                ? JSON.parse(resFundo.result.result.value)
+                : resFundo.result?.value
+          } catch {}
+
+          let fundoOk = false
+          if (fundo.ativo) {
+            // No modo com fundo:
+            // - Deve ter fonte de dados 'base' carregada (> 0 fontes)
+            // - Mais de 1 camada estilizada
+            // - Estado pronto
+            // Teste falha quando não há fundo desenhado!
+            fundoOk =
+              Boolean(valFundo) &&
+              valFundo.sourceCount > 0 &&
+              valFundo.sources.includes('base') &&
+              valFundo.isBaseLoaded &&
+              valFundo.estadoFundo === 'pronto' &&
+              valFundo.layerCount > 1
+          } else {
+            // No modo sem fundo: 0 fontes de dados e estado desligado
+            fundoOk =
+              Boolean(valFundo) &&
+              valFundo.sourceCount === 0 &&
+              valFundo.estadoFundo === 'desligado' &&
+              valFundo.layerCount === 1
+          }
+
+          if (!heightOk || !markersCountOk || !markersPosOk || !markersInsideOk || !fundoOk) {
             allPassed = false
           }
 
           console.log(`\nCenário: ${vp.name} | Tema: ${th} | Fundo: ${fundo.name}`)
+          console.log(
+            `  - Fundo cartográfico (${fundo.name}): ${
+              fundoOk
+                ? fundo.ativo
+                  ? `OK (fonte "base" carregada, ${valFundo?.sourceCount} fonte(s), ${valFundo?.layerCount} camadas, estado pronto)`
+                  : 'OK (0 fontes de dados, 1 camada background, estado desligado)'
+                : `FALHA: ${fundo.ativo ? 'FUNDO NÃO DESENHADO' : 'FONTE INESPERADA EM MODO DESLIGADO'} (${JSON.stringify(valFundo)})`
+            }`,
+          )
           console.log(
             `  - .map-container: ${val?.boundingWidth}x${val?.boundingHeight} px -> ${heightOk ? 'OK' : 'FALHA'}`,
           )

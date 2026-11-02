@@ -218,14 +218,20 @@ export class MaquinaEstadoFundo {
    * Notifica erro do MapLibre.
    * `error` com `sourceId: 'base'` ou HTTP status (403, 429, 503...) → aviso e nova tentativa.
    */
-  public notificarErro(evento?: { sourceId?: string; status?: number; error?: unknown }): void {
+  public notificarErro(evento?: {
+    sourceId?: string
+    dataType?: string
+    status?: number
+    error?: unknown
+  }): void {
     if (this.desligado) return
 
     const sourceId = evento?.sourceId
     const status = evento?.status ?? extrairStatusErro(evento)
+    const isStyleError = evento?.dataType === 'style'
 
-    // Se o evento especifica sourceId e NÃO é a fonte base do mapa e nem status HTTP de provedor, ignora
-    if (sourceId && sourceId !== 'base' && !status) {
+    // Se o evento especifica sourceId, não é erro de estilo, não é a fonte base do mapa e nem status HTTP de provedor, ignora
+    if (sourceId && sourceId !== 'base' && !status && !isStyleError) {
       return
     }
 

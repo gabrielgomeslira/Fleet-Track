@@ -221,7 +221,7 @@ describe('Estilo do Mapa (T-93 / ADR-0016 itens 3 e 4; DS §6)', () => {
       expect(estiloIncompleto.layers.length).toBe(1)
     })
 
-    it('MAP_STYLE_URL definida substitui TileJSON e glifos', () => {
+    it('MAP_STYLE_URL definida substitui TileJSON e glifos e devolve a URL para carregamento direto', () => {
       const estilo = estiloMapa(MAP_TOKENS_DARK, {
         desligado: false,
         styleUrl: 'https://mapas.empresa.com.br/estilo.json',
@@ -229,9 +229,31 @@ describe('Estilo do Mapa (T-93 / ADR-0016 itens 3 e 4; DS §6)', () => {
         glyphsUrl: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
       })
 
-      // Não declara a fonte TileJSON padrão nem os glifos padrão
-      expect(estilo.sources).toEqual({})
-      expect(estilo.glyphs).toBeUndefined()
+      // MAP_STYLE_URL é retornada como URL externa direta para o MapLibre (ADR-0016)
+      expect(estilo).toBe('https://mapas.empresa.com.br/estilo.json')
+    })
+
+    it('MAP_STYLE_URL com espaços em branco é devidamente normalizada/aparada', () => {
+      const estilo = estiloMapa(MAP_TOKENS_DARK, {
+        desligado: false,
+        styleUrl: '   https://mapas.empresa.com.br/estilo.json   ',
+      })
+
+      expect(estilo).toBe('https://mapas.empresa.com.br/estilo.json')
+    })
+
+    it('quando desligado for true, prevalece contingência desligada mesmo se styleUrl estiver preenchida', () => {
+      const estilo = estiloMapa(MAP_TOKENS_DARK, {
+        desligado: true,
+        styleUrl: 'https://mapas.empresa.com.br/estilo.json',
+      })
+
+      expect(typeof estilo).toBe('object')
+      if (typeof estilo === 'object') {
+        expect(estilo.sources).toEqual({})
+        expect(estilo.layers.length).toBe(1)
+        expect(estilo.layers[0].id).toBe('background')
+      }
     })
   })
 })

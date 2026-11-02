@@ -4,6 +4,7 @@ import {
   formatarInstante,
   formatarHora,
   formatarDia,
+  formatarEntregueEm,
   formatarPercentual,
 } from './formatos'
 
@@ -174,6 +175,45 @@ describe('Formatadores no fuso local e internacionalização (T-101 / H-28)', ()
       expect(formatarPercentual('abc')).toBe(SEM_DADO)
       expect(formatarPercentual(NaN)).toBe(SEM_DADO)
       expect(formatarPercentual(Infinity)).toBe(SEM_DADO)
+    })
+  })
+
+  describe('formatarEntregueEm: formatação da coluna "Entregue em" de Entregas', () => {
+    it('formata a data quando deliveredAt for uma data válida', () => {
+      definirFuso('America/Sao_Paulo')
+      expect(formatarEntregueEm('2026-11-01T15:30:00Z', 'entregue')).toBe('01/11/2026')
+      expect(formatarEntregueEm('2026-10-25T10:00:00Z', 'em_transito')).toBe('25/10/2026')
+      expect(formatarEntregueEm('2026-05-12', 'entregue')).toBe('12/05/2026')
+    })
+
+    it('retorna "—" para entregas abertas (em_transito ou pendente) sem data de entrega', () => {
+      expect(formatarEntregueEm(null, 'em_transito')).toBe('—')
+      expect(formatarEntregueEm(undefined, 'em_transito')).toBe('—')
+      expect(formatarEntregueEm('', 'em_transito')).toBe('—')
+
+      expect(formatarEntregueEm(null, 'pendente')).toBe('—')
+      expect(formatarEntregueEm(undefined, 'pendente')).toBe('—')
+      expect(formatarEntregueEm('', 'pendente')).toBe('—')
+    })
+
+    it('retorna "—" para entregas canceladas sem data de entrega', () => {
+      expect(formatarEntregueEm(null, 'cancelado')).toBe('—')
+      expect(formatarEntregueEm(undefined, 'cancelado')).toBe('—')
+      expect(formatarEntregueEm('', 'cancelado')).toBe('—')
+      expect(formatarEntregueEm(null, 'cancelada')).toBe('—')
+    })
+
+    it('retorna "sem dado" para entrega com status entregue mas com data ausente (falta real de dado)', () => {
+      expect(formatarEntregueEm(null, 'entregue')).toBe(SEM_DADO)
+      expect(formatarEntregueEm(undefined, 'entregue')).toBe(SEM_DADO)
+      expect(formatarEntregueEm('', 'entregue')).toBe(SEM_DADO)
+      expect(formatarEntregueEm('invalido', 'entregue')).toBe(SEM_DADO)
+    })
+
+    it('retorna "sem dado" para outros status desconhecidos sem data de entrega', () => {
+      expect(formatarEntregueEm(null, 'desconhecido')).toBe(SEM_DADO)
+      expect(formatarEntregueEm(null, null)).toBe(SEM_DADO)
+      expect(formatarEntregueEm(null, '')).toBe(SEM_DADO)
     })
   })
 })
