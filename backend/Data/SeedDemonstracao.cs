@@ -1,26 +1,29 @@
 using FleetApi.Demo;
+using FleetApi.Jobs;
 using FleetApi.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace FleetApi.Data;
 
 /// <summary>
-/// Dados de demonstração (antes em db/init.sql). Idempotente: só grava se <c>vehicles</c> estiver
-/// vazia, e grava tudo ou nada numa transação. Até a T-36 ligar o seed ao modo demo, a API
-/// semeia em toda subida em que o banco está vazio (comportamento anterior).
+/// Dados de demonstração (antes em db/init.sql). Só roda no modo demo (<c>FLEET_DEMO_MODE=true</c>,
+/// padrão desligado; ADR-0007) e, mesmo nele, só grava se <c>vehicles</c> estiver vazia, tudo ou nada
+/// numa transação. Nomes e placas são fictícios (H-14): motoristas são combinações comuns de nome e
+/// sobrenome sem relação com pessoa real, e as placas são trincas de letras consecutivas do alfabeto
+/// com dígitos em sequência, que não identificam veículo algum.
 /// </summary>
 public static class SeedDemonstracao
 {
-    /// <summary>Chave de configuração que liga/desliga o seed. Padrão: ligado.</summary>
-    public const string ChaveConfiguracao = "Seed:Demonstracao";
+    /// <summary>Mesma chave do job de simulação: o seed e o job são ligados juntos pelo modo demo.</summary>
+    public const string ChaveConfiguracao = SimulacaoJob.ChaveConfiguracao;
 
     // Impede que duas instâncias subindo juntas semeiem ao mesmo tempo.
     private const long ChaveLock = 0x464C454554534544; // "FLEETSED"
 
     private static Guid IdVeiculo(int n) => Guid.Parse($"a1b2c3d4-{n:D4}-4000-8000-{n:D12}");
 
-    public static bool Habilitado(IConfiguration configuracao) =>
-        !bool.TryParse(configuracao[ChaveConfiguracao], out var valor) || valor;
+    /// <summary>Ausente ou diferente de "true" = desligado, como no <see cref="SimulacaoJob"/>.</summary>
+    public static bool Habilitado(IConfiguration configuracao) => SimulacaoJob.Habilitado(configuracao);
 
     /// <returns>true se semeou; false se a tabela já tinha veículos.</returns>
     public static async Task<bool> ExecutarAsync(AppDbContext db, CancellationToken ct = default)
@@ -69,10 +72,10 @@ public static class SeedDemonstracao
             V(3, "GHI-9012", "Mercedes Actros", "João Santos", "parado", -25.4284, -49.2733, 0, 92, TimeSpan.FromHours(1)),
             V(4, "JKL-3456", "DAF XF", "Ana Costa", "em_rota", -19.9167, -43.9345, 63.2, 55, TimeSpan.FromMinutes(3)),
             V(5, "MNO-7890", "Iveco Stralis", "Pedro Lima", "manutencao", -23.5505, -46.6333, 0, 30, TimeSpan.FromHours(2)),
-            V(6, "PQR-1122", "Volvo VM 270", "Fernanda Souza", "em_rota", -21.1767, -47.8208, 91.0, 72, TimeSpan.FromMinutes(8)),
+            V(6, "PQR-1122", "Volvo VM 270", "Fernanda Souza", "em_rota", -21.1775, -47.8103, 91.0, 72, TimeSpan.FromMinutes(8)),
             V(7, "STU-3344", "Scania P320", "Ricardo Alves", "parado", -30.0346, -51.2177, 0, 88, TimeSpan.FromMinutes(30)),
             V(8, "VWX-5566", "Mercedes Atego", "Juliana Rocha", "em_rota", -15.7801, -47.9292, 55.8, 61, TimeSpan.FromMinutes(12)),
-            V(9, "YZA-7788", "MAN TGX", "Lucas Ferreira", "em_rota", -12.9714, -38.5124, 78.3, 39, TimeSpan.FromMinutes(2)),
+            V(9, "YZA-7788", "MAN TGX", "Lucas Ferreira", "em_rota", -12.9714, -38.5014, 78.3, 39, TimeSpan.FromMinutes(2)),
             V(10, "BCD-9900", "Ford Cargo", "Camila Dias", "parado", -3.7172, -38.5433, 0, 95, TimeSpan.FromMinutes(45)),
         ];
     }

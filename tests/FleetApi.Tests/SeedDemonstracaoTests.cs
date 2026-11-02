@@ -1,6 +1,8 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using FleetApi.Data;
 using FleetApi.Demo;
+using FleetApi.Jobs;
 using FleetApi.Models;
 using FleetApi.Tests.Infra;
 using Microsoft.EntityFrameworkCore;
@@ -130,9 +132,9 @@ public sealed class SeedDemonstracaoTests(DbFixture banco) : TesteComBanco(banco
     }
 
     [Fact]
-    public async Task Subida_da_api_com_banco_vazio_semeia_quando_o_seed_esta_ligado()
+    public async Task Subida_da_api_no_modo_demo_com_banco_vazio_semeia()
     {
-        using var fabrica = Banco.Factory.WithWebHostBuilder(b => b.UseSetting("Seed:Demonstracao", "true"));
+        using var fabrica = Banco.Factory.WithWebHostBuilder(b => b.UseSetting(SeedDemonstracao.ChaveConfiguracao, "true"));
         using var cliente = fabrica.CreateClient();
 
         var resposta = await cliente.GetAsync("/api/vehicles");
@@ -143,12 +145,53 @@ public sealed class SeedDemonstracaoTests(DbFixture banco) : TesteComBanco(banco
     }
 
     [Theory]
-    [InlineData(null, true)]
-    [InlineData("true", true)]
+    [InlineData(null)]
+    [InlineData("false")]
+    [InlineData("1")]
+    [InlineData("lixo")]
+    public async Task Subida_da_api_fora_do_modo_demo_nao_carrega_o_seed(string? valor)
+    {
+        using var fabrica = Banco.Factory.WithWebHostBuilder(
+            b => b.UseSetting(SeedDemonstracao.ChaveConfiguracao, valor));
+        using var cliente = fabrica.CreateClient();
+
+        var resposta = await cliente.GetAsync("/api/vehicles");
+
+        resposta.EnsureSuccessStatusCode();
+        using var json = JsonDocument.Parse(await resposta.Content.ReadAsStringAsync());
+        Assert.Equal(0, json.RootElement.GetArrayLength());
+        await using var db = DbFixture.CriarContexto();
+        Assert.Equal(0, await db.Deliveries.CountAsync());
+        Assert.Equal(0, await db.TelemetryRecords.CountAsync());
+    }
+
+    [Fact]
+    public async Task Subida_da_api_no_modo_demo_com_dados_proprios_nao_semeia()
+    {
+        await using (var db = DbFixture.CriarContexto())
+        {
+            db.Vehicles.Add(new Vehicle { Plate = "ZZZ-0000", Model = "m", DriverName = "d" });
+            await db.SaveChangesAsync();
+        }
+        using var fabrica = Banco.Factory.WithWebHostBuilder(b => b.UseSetting(SeedDemonstracao.ChaveConfiguracao, "true"));
+        using var cliente = fabrica.CreateClient();
+
+        (await cliente.GetAsync("/api/vehicles")).EnsureSuccessStatusCode();
+
+        await using var verificacao = DbFixture.CriarContexto();
+        Assert.Equal(1, await verificacao.Vehicles.CountAsync());
+        Assert.Equal(0, await verificacao.Deliveries.CountAsync());
+    }
+
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData("", false)]
     [InlineData("false", false)]
-    [InlineData("FALSE", false)]
-    [InlineData("lixo", true)]
-    public void Seed_vem_ligado_por_padrao_e_so_desliga_com_false(string? valor, bool esperado)
+    [InlineData("1", false)]
+    [InlineData("lixo", false)]
+    [InlineData("true", true)]
+    [InlineData("TRUE", true)]
+    public void Seed_vem_desligado_por_padrao_e_so_liga_com_true(string? valor, bool esperado)
     {
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(valor is null
@@ -158,4 +201,39 @@ public sealed class SeedDemonstracaoTests(DbFixture banco) : TesteComBanco(banco
 
         Assert.Equal(esperado, SeedDemonstracao.Habilitado(config));
     }
+
+    [Fact]
+    public void Seed_e_job_leem_a_mesma_variavel_FLEET_DEMO_MODE()
+    {
+        Assert.Equal("FLEET_DEMO_MODE", SeedDemonstracao.ChaveConfiguracao);
+        Assert.Equal(SimulacaoJob.ChaveConfiguracao, SeedDemonstracao.ChaveConfiguracao);
+    }
+
+    [Fact]
+    public async Task Nomes_e_placas_do_seed_sao_ficticios()
+    {
+        await using var db = DbFixture.CriarContexto();
+        await SeedDemonstracao.ExecutarAsync(db);
+
+        var veiculos = await db.Vehicles.AsNoTracking().ToListAsync();
+
+        Assert.Equal(10, veiculos.Count);
+        Assert.Equal(veiculos.Count, veiculos.Select(v => v.Plate).Distinct().Count());
+        foreach (var v in veiculos)
+        {
+            // Placa de mentira: três letras consecutivas do alfabeto (ABC, DEF, ..., YZA) e dígitos em
+            // sequência (1234, 5678, 9012, ...) ou pares repetidos (1122, 9900). Uma placa real colada
+            // aqui por engano não passa neste teste.
+            var m = Regex.Match(v.Plate, @"^([A-Z])([A-Z])([A-Z])-(\d{4})$");
+            Assert.True(m.Success, $"placa fora do formato fictício: {v.Plate}");
+            Assert.True(
+                Consecutivas(m.Groups[1].Value[0], m.Groups[2].Value[0]) && Consecutivas(m.Groups[2].Value[0], m.Groups[3].Value[0]),
+                $"letras da placa não são consecutivas: {v.Plate}");
+
+            // Motorista: só letras e espaços (nome e sobrenome), sem e-mail, telefone ou documento.
+            Assert.Matches(@"^\p{L}+( \p{L}+)+$", v.DriverName);
+        }
+    }
+
+    private static bool Consecutivas(char a, char b) => b == (a == 'Z' ? 'A' : (char)(a + 1));
 }

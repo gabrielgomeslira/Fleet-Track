@@ -394,10 +394,9 @@ public sealed class SimulacaoJobTests(DbFixture banco) : TesteComBanco(banco)
                 Assert.Equal(60, depois.Speed);
                 // Entre dois ciclos, 500 m exatos pela rota: sem salto e sem ziguezague.
                 Assert.InRange(Metros(new Ponto(primeiro.Longitude, primeiro.Latitude), segundo.Latitude, segundo.Longitude), 495, 505);
-                // O primeiro ciclo encaixa a posição semeada na rota. Dois veículos do seed (Ribeirão Preto e
-                // Salvador) nascem ~1,2 km fora da linha: o encaixe é um deslocamento único e limitado.
-                // Compara-se com a posição semeada, que ainda é a do início do corredor.
-                Assert.InRange(Metros(new Ponto(veiculo.Longitude, veiculo.Latitude), primeiro.Latitude, primeiro.Longitude), 0, 2_000);
+                // Todo veículo em rota nasce no primeiro ponto do corredor (T-36): o primeiro ciclo também anda
+                // 500 m, sem o salto de encaixe que Ribeirão Preto e Salvador faziam (~1,2 km).
+                Assert.InRange(Metros(new Ponto(veiculo.Longitude, veiculo.Latitude), primeiro.Latitude, primeiro.Longitude), 495, 505);
             }
             else
             {

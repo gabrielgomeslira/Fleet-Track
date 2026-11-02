@@ -19,8 +19,8 @@ builder.Services.AddDbContext<AppDbContext>((sp, options) =>
         ConexaoBanco.Resolver(sp.GetRequiredService<IConfiguration>()),
         npgsql => npgsql.EnableRetryOnFailure(maxRetryCount: 3)));
 
-// Simulação da frota: só no modo demo (FLEET_DEMO_MODE=true; padrão false). Fora dele o job nem é
-// registrado, então nenhuma posição é alterada (ADR-0007).
+// Simulação da frota e seed: só no modo demo (FLEET_DEMO_MODE=true; padrão false). Fora dele o job
+// nem é registrado, então nenhuma posição é alterada, e nada é semeado (ADR-0007).
 builder.Services.AddSingleton(TimeProvider.System);
 if (SimulacaoJob.Habilitado(builder.Configuration))
 {

@@ -18,7 +18,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting("ConnectionStrings:Default", ConexaoDeTeste);
-        // Os testes criam os proprios dados; o seed da subida so entra nos testes que o pedem.
-        builder.UseSetting("Seed:Demonstracao", "false");
+        // Os testes criam os proprios dados; o seed e o job da subida so entram nos testes que ligam o
+        // modo demo. Fixar "false" evita que um FLEET_DEMO_MODE do ambiente de quem roda interfira.
+        builder.UseSetting("FLEET_DEMO_MODE", "false");
     }
 }

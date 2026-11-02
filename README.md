@@ -134,7 +134,7 @@ flowchart LR
 
 - O **frontend** é um app React servido pelo Nginx, que também encaminha `/api` para o backend.
 - O **backend** é uma API ASP.NET Core com Entity Framework Core.
-- O **banco** é um PostgreSQL 16. A API cria e atualiza o esquema na subida, com as [migrações do EF Core](backend/Migrations), e grava os dados de demonstração quando as tabelas estão vazias ([`SeedDemonstracao.cs`](backend/Data/SeedDemonstracao.cs)). Para migrar sem subir a API, use `dotnet FleetApi.dll migrate`.
+- O **banco** é um PostgreSQL 16. A API cria e atualiza o esquema na subida, com as [migrações do EF Core](backend/Migrations), e, no modo demo (`FLEET_DEMO_MODE=true`) com as tabelas vazias, grava os dados de demonstração ([`SeedDemonstracao.cs`](backend/Data/SeedDemonstracao.cs)). Para migrar sem subir a API, use `dotnet FleetApi.dll migrate`.
 - O **mapa** usa MapLibre GL carregado sob demanda (chunk próprio) com tiles vetoriais do OpenFreeMap em estilo próprio sem vegetação, relevo ou pontos de interesse. Oferece suporte completo a teclado (WCAG 2.2 AA) e respeita temas claro e escuro. Para desativar ou trocar o provedor, consulte a seção [Mapa de fundo e privacidade](#mapa-de-fundo-e-privacidade) e as [variáveis de ambiente do mapa](#mapa).
 
 ### Tecnologias
