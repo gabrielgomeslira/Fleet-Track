@@ -42,6 +42,7 @@ public class AppDbContext : DbContext
                 .HasDefaultValueSql("100").ValueGeneratedNever();
             e.Property(v => v.UpdatedAt).HasColumnName("updated_at").HasColumnType(TipoInstante)
                 .HasDefaultValueSql("NOW()").ValueGeneratedNever();
+            e.Property(v => v.LastSignalAt).HasColumnName("last_signal_at").HasColumnType(TipoInstante);
             e.HasIndex(v => new { v.Plate, v.Id });
         });
 

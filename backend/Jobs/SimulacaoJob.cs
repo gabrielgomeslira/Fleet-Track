@@ -81,10 +81,16 @@ public sealed class SimulacaoJob(
             var gravados = 0;
             foreach (var veiculo in veiculos)
             {
+                // Posição expirada pelo expurgo (H-12): sem ponto de partida, nada a mover nem a gravar.
+                if (veiculo.Latitude is not { } latitude || veiculo.Longitude is not { } longitude)
+                {
+                    continue;
+                }
+
                 // Só quem está em rota e tem entrega com rota anda. Nenhuma posição é inventada.
                 var rota = veiculo.Status == "em_rota" && rotas.TryGetValue(veiculo.Id, out var r) ? r : null;
                 var novo = MotorDemo.Avancar(
-                    new EstadoVeiculo(veiculo.Latitude, veiculo.Longitude, veiculo.Speed, veiculo.FuelLevel),
+                    new EstadoVeiculo(latitude, longitude, veiculo.Speed, veiculo.FuelLevel),
                     rota,
                     Intervalo);
 
@@ -105,6 +111,7 @@ public sealed class SimulacaoJob(
                 veiculo.Speed = novo.VelocidadeKmH;
                 veiculo.FuelLevel = novo.Combustivel;
                 veiculo.UpdatedAt = instante;
+                veiculo.LastSignalAt = instante;
                 gravados++;
             }
 

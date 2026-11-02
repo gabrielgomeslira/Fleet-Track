@@ -25,6 +25,7 @@ services:
       ConnectionStrings__Default: ${CONNECTION_STRING}
       # Sem valor padrao "true": ausente = desligado (seguro para producao).
       FLEET_DEMO_MODE: ${FLEET_DEMO_MODE:-false}
+      FLEET_TELEMETRY_RETENTION_HOURS: ${FLEET_TELEMETRY_RETENTION_HOURS:-24}
       ASPNETCORE_URLS: http://+:5000
     ports:
       - "${BACKEND_PORT}:5000"

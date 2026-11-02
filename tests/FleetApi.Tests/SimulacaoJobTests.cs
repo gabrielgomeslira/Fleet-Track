@@ -134,8 +134,8 @@ public sealed class SimulacaoJobTests(DbFixture banco) : TesteComBanco(banco)
         var depois = await LerVeiculoAsync(veiculo.Id);
         Assert.Equal(60, depois.Speed);
         Assert.Equal(61, depois.FuelLevel); // consumo é da T-97
-        Assert.Equal(500, rota.Projetar(new Ponto(depois.Longitude, depois.Latitude)), precision: 0);
-        Assert.InRange(Metros(rota.Inicio, depois.Latitude, depois.Longitude), 495, 505);
+        Assert.Equal(500, rota.Projetar(new Ponto(depois.Longitude!.Value, depois.Latitude!.Value)), precision: 0);
+        Assert.InRange(Metros(rota.Inicio, depois.Latitude!.Value, depois.Longitude!.Value), 495, 505);
 
         var registro = (await LerTelemetriaAsync(veiculo.Id)).Single();
         Assert.Equal(depois.Latitude, registro.Latitude);
@@ -217,7 +217,7 @@ public sealed class SimulacaoJobTests(DbFixture banco) : TesteComBanco(banco)
         await NovoJob(servicos, new RelogioManual(Inicio)).ExecutarCicloAsync();
 
         var depois = await LerVeiculoAsync(veiculo.Id);
-        Assert.Equal(-46.0, depois.Longitude, precision: 9); // andou para o sul, pela rota curta
+        Assert.Equal(-46.0, depois.Longitude!.Value, precision: 9); // andou para o sul, pela rota curta
         Assert.True(depois.Latitude < -23.0);
     }
 
@@ -260,7 +260,7 @@ public sealed class SimulacaoJobTests(DbFixture banco) : TesteComBanco(banco)
 
         Assert.Equal(2, totais.Sum());
         Assert.Equal(2, await ContarTelemetriaAsync());
-        Assert.InRange(Metros(rota.Inicio, (await LerVeiculoAsync(veiculo.Id)).Latitude, (await LerVeiculoAsync(veiculo.Id)).Longitude), 495, 505);
+        Assert.InRange(Metros(rota.Inicio, (await LerVeiculoAsync(veiculo.Id)).Latitude!.Value, (await LerVeiculoAsync(veiculo.Id)).Longitude!.Value), 495, 505);
     }
 
     [Fact]
@@ -396,7 +396,7 @@ public sealed class SimulacaoJobTests(DbFixture banco) : TesteComBanco(banco)
                 Assert.InRange(Metros(new Ponto(primeiro.Longitude, primeiro.Latitude), segundo.Latitude, segundo.Longitude), 495, 505);
                 // Todo veículo em rota nasce no primeiro ponto do corredor (T-36): o primeiro ciclo também anda
                 // 500 m, sem o salto de encaixe que Ribeirão Preto e Salvador faziam (~1,2 km).
-                Assert.InRange(Metros(new Ponto(veiculo.Longitude, veiculo.Latitude), primeiro.Latitude, primeiro.Longitude), 495, 505);
+                Assert.InRange(Metros(new Ponto(veiculo.Longitude!.Value, veiculo.Latitude!.Value), primeiro.Latitude, primeiro.Longitude), 495, 505);
             }
             else
             {

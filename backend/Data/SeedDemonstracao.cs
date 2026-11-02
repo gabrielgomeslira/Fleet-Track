@@ -63,6 +63,7 @@ public static class SeedDemonstracao
         {
             Id = IdVeiculo(n), Plate = placa, Model = modelo, DriverName = motorista, Status = status,
             Latitude = lat, Longitude = lon, Speed = vel, FuelLevel = combustivel, UpdatedAt = agora - atras,
+            LastSignalAt = agora - atras,
         };
 
         return
@@ -140,8 +141,8 @@ public static class SeedDemonstracao
                 yield return new TelemetryRecord
                 {
                     VehicleId = v.Id,
-                    Latitude = v.Latitude + (aleatorio.NextDouble() - 0.5) * 0.01 * gs,
-                    Longitude = v.Longitude + (aleatorio.NextDouble() - 0.5) * 0.01 * gs,
+                    Latitude = v.Latitude!.Value + (aleatorio.NextDouble() - 0.5) * 0.01 * gs,
+                    Longitude = v.Longitude!.Value + (aleatorio.NextDouble() - 0.5) * 0.01 * gs,
                     Speed = v.Status == "em_rota" ? 40 + aleatorio.NextDouble() * 60 : 0,
                     FuelLevel = Math.Max(10, v.FuelLevel - gs),
                     RecordedAt = agora - TimeSpan.FromMinutes(gs),

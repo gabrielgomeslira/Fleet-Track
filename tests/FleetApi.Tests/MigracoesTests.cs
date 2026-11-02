@@ -35,7 +35,9 @@ public sealed class MigracoesTests(DbFixture banco) : TesteComBanco(banco)
     [Theory]
     [InlineData("vehicles", "plate", "character varying", 10, "NO", null)]
     [InlineData("vehicles", "status", "character varying", 20, "NO", "'parado'::character varying")]
-    [InlineData("vehicles", "latitude", "double precision", null, "NO", "'-23.55'::numeric")]
+    [InlineData("vehicles", "latitude", "double precision", null, "YES", "'-23.55'::numeric")]
+    [InlineData("vehicles", "longitude", "double precision", null, "YES", "'-46.63'::numeric")]
+    [InlineData("vehicles", "last_signal_at", "timestamp with time zone", null, "YES", null)]
     [InlineData("vehicles", "fuel_level", "integer", null, "NO", "100")]
     [InlineData("vehicles", "updated_at", "timestamp with time zone", null, "NO", "now()")]
     [InlineData("deliveries", "origin", "character varying", 200, "NO", null)]
@@ -109,7 +111,7 @@ public sealed class MigracoesTests(DbFixture banco) : TesteComBanco(banco)
     {
         await using var db = DbFixture.CriarContexto();
         var migrador = db.GetService<IMigrator>();
-        var anterior = (await db.Database.GetAppliedMigrationsAsync()).Reverse().Skip(1).First();
+        var anterior = (await db.Database.GetAppliedMigrationsAsync()).TakeWhile(m => !m.EndsWith("_RotaDaEntrega")).Last();
         Assert.EndsWith("_TimestamptzEIndices", anterior);
 
         try
@@ -126,6 +128,98 @@ public sealed class MigracoesTests(DbFixture banco) : TesteComBanco(banco)
         }
 
         Assert.True(await ExisteColuna("deliveries", "route_path"));
+    }
+
+    [Fact]
+    public async Task Ultimo_sinal_preenche_a_coluna_com_o_updated_at_de_quem_ja_existia()
+    {
+        await using var db = DbFixture.CriarContexto();
+        var migrador = db.GetService<IMigrator>();
+        var anterior = (await db.Database.GetAppliedMigrationsAsync()).TakeWhile(m => !m.EndsWith("_UltimoSinal")).Last();
+        var atualizado = new DateTime(2026, 10, 30, 8, 15, 0, DateTimeKind.Utc);
+
+        try
+        {
+            await migrador.MigrateAsync(anterior);
+            Assert.False(await ExisteColuna("vehicles", "last_signal_at"));
+            await ExecutarAsync(
+                "INSERT INTO vehicles (plate, model, driver_name, updated_at) VALUES ('MIG-0001', 'm', 'd', @t)",
+                ("t", atualizado));
+        }
+        finally
+        {
+            await migrador.MigrateAsync();
+        }
+
+        Assert.True(await ExisteColuna("vehicles", "last_signal_at"));
+        var veiculo = await db.Vehicles.AsNoTracking().SingleAsync();
+        Assert.Equal(atualizado, veiculo.LastSignalAt);
+        Assert.Equal(atualizado, veiculo.UpdatedAt);
+        Assert.Equal((-23.55, -46.63), (veiculo.Latitude, veiculo.Longitude));
+    }
+
+    [Fact]
+    public async Task Down_do_ultimo_sinal_devolve_a_posicao_ao_que_era_obrigatorio()
+    {
+        await using var db = DbFixture.CriarContexto();
+        var migrador = db.GetService<IMigrator>();
+        var anterior = (await db.Database.GetAppliedMigrationsAsync()).TakeWhile(m => !m.EndsWith("_UltimoSinal")).Last();
+        var semRegistro = Guid.NewGuid();
+        var comRegistro = Guid.NewGuid();
+        await ExecutarAsync(
+            "INSERT INTO vehicles (id, plate, model, driver_name, latitude, longitude) VALUES (@a, 'MIG-0002', 'm', 'd', NULL, NULL), (@b, 'MIG-0003', 'm', 'd', NULL, NULL)",
+            ("a", semRegistro), ("b", comRegistro));
+        await ExecutarAsync(
+            "INSERT INTO telemetry_records (vehicle_id, latitude, longitude, speed, fuel_level, recorded_at) VALUES (@b, -10.5, -40.25, 0, 50, now())",
+            ("b", comRegistro));
+
+        try
+        {
+            await migrador.MigrateAsync(anterior);
+
+            Assert.False(await ExisteColuna("vehicles", "last_signal_at"));
+            Assert.Equal("NO", await Anulavel("vehicles", "latitude"));
+            Assert.Equal("NO", await Anulavel("vehicles", "longitude"));
+        }
+        finally
+        {
+            await migrador.MigrateAsync();
+        }
+
+        // Quem ainda tinha registro volta com a posição dele; quem não tinha, com o padrão do esquema.
+        Assert.Equal((-23.55, -46.63), await Posicao(semRegistro));
+        Assert.Equal((-10.5, -40.25), await Posicao(comRegistro));
+
+        static async Task<(double?, double?)> Posicao(Guid id)
+        {
+            await using var leitura = DbFixture.CriarContexto();
+            var v = await leitura.Vehicles.AsNoTracking().SingleAsync(x => x.Id == id);
+            return (v.Latitude, v.Longitude);
+        }
+    }
+
+    private static async Task ExecutarAsync(string sql, params (string Nome, object Valor)[] parametros)
+    {
+        await using var conexao = new NpgsqlConnection(ApiFactory.ConexaoDeTeste);
+        await conexao.OpenAsync();
+        await using var cmd = new NpgsqlCommand(sql, conexao);
+        foreach (var (nome, valor) in parametros)
+        {
+            cmd.Parameters.AddWithValue(nome, valor);
+        }
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    private static async Task<string> Anulavel(string tabela, string coluna)
+    {
+        await using var conexao = new NpgsqlConnection(ApiFactory.ConexaoDeTeste);
+        await conexao.OpenAsync();
+        await using var cmd = new NpgsqlCommand(
+            "SELECT is_nullable FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = @t AND column_name = @c",
+            conexao);
+        cmd.Parameters.AddWithValue("t", tabela);
+        cmd.Parameters.AddWithValue("c", coluna);
+        return (string)(await cmd.ExecuteScalarAsync())!;
     }
 
     private static async Task<bool> ExisteColuna(string tabela, string coluna)

@@ -27,6 +27,10 @@ if (SimulacaoJob.Habilitado(builder.Configuration))
     builder.Services.AddHostedService<SimulacaoJob>();
 }
 
+// Expurgo da telemetria (H-12): roda em qualquer modo. No demo preserva o último registro de cada veículo.
+builder.Services.AddSingleton(sp => Retencao.Resolver(sp.GetRequiredService<IConfiguration>()));
+builder.Services.AddHostedService<ExpurgoJob>();
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -39,10 +43,17 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Falha cedo: sem a configuração do banco a API nem começa a escutar.
+// Falha cedo: sem a configuração do banco ou com a retenção inválida a API nem começa a escutar.
 try
 {
     ConexaoBanco.Resolver(app.Configuration);
+    var retencao = Retencao.Resolver(app.Configuration);
+    if (retencao.AbaixoDoPiso)
+    {
+        app.Logger.LogWarning(
+            "{Variavel} abaixo do piso de {Piso} h: a janela de 2 h da pagina do veiculo ficara sem dados.",
+            Retencao.Variavel, Retencao.Piso.TotalHours);
+    }
 }
 catch (ConfiguracaoInvalidaException erro)
 {

@@ -143,12 +143,16 @@ namespace FleetApi.Migrations
                         .HasColumnName("fuel_level")
                         .HasDefaultValueSql("100");
 
-                    b.Property<double>("Latitude")
+                    b.Property<DateTime?>("LastSignalAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_signal_at");
+
+                    b.Property<double?>("Latitude")
                         .HasColumnType("double precision")
                         .HasColumnName("latitude")
                         .HasDefaultValueSql("-23.55");
 
-                    b.Property<double>("Longitude")
+                    b.Property<double?>("Longitude")
                         .HasColumnType("double precision")
                         .HasColumnName("longitude")
                         .HasDefaultValueSql("-46.63");
