@@ -92,10 +92,16 @@ export default function FleetMap({ vehicles, deliveries = [] }: Props) {
 
     mapRef.current = map
     setMapaPronto(true)
+    if (typeof window !== 'undefined') {
+      ;(window as unknown as { __fleetMap?: MapLibreMap }).__fleetMap = map
+    }
     const marcadoresAtuais = marcadoresRef.current
 
     return () => {
       setMapaPronto(false)
+      if (typeof window !== 'undefined') {
+        delete (window as unknown as { __fleetMap?: MapLibreMap }).__fleetMap
+      }
       marcadoresAtuais.forEach(({ marcador, popup }) => {
         popup.fechar()
         marcador.remover()

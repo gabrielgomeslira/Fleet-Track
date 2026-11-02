@@ -1,9 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import {
-  MarcadorVeiculo,
-  gerarAriaLabelMarcador,
-  criarIconeFormaMarcador,
-} from './MarcadorVeiculo'
+import { MarcadorVeiculo, gerarAriaLabelMarcador, criarIconeFormaMarcador } from './MarcadorVeiculo'
 import type { Vehicle } from '../../types'
 
 const mockVeiculoRota: Vehicle = {
@@ -105,7 +101,11 @@ describe('MarcadorVeiculo (T-81 / H-22 / DS §6.3)', () => {
       expect(btn.getAttribute('tabindex')).toBe('0')
       expect(btn.getAttribute('data-vehicle-id')).toBe('v-101')
       expect(btn.getAttribute('data-status')).toBe('em_rota')
+      expect(btn.getAttribute('data-plate')).toBe('BRA-2E19')
+      expect(btn.getAttribute('data-lat')).toBe('-23.55')
+      expect(btn.getAttribute('data-lng')).toBe('-46.63')
       expect(btn.getAttribute('aria-label')).toBe('Veículo BRA-2E19 — Em rota a 84 km/h')
+      expect(btn.style.position).not.toBe('relative')
       expect(btn.style.outlineOffset).toBe('2px')
       expect(parseInt(btn.style.width, 10)).toBeGreaterThanOrEqual(24)
       expect(parseInt(btn.style.height, 10)).toBeGreaterThanOrEqual(24)
@@ -137,6 +137,8 @@ describe('MarcadorVeiculo (T-81 / H-22 / DS §6.3)', () => {
       // O elemento no DOM continua exatamente a mesma instância
       expect(marcador.button).toBe(btnOriginal)
       expect(marcador.button.getAttribute('data-status')).toBe('parado')
+      expect(marcador.button.getAttribute('data-lat')).toBe('-23.6')
+      expect(marcador.button.getAttribute('data-lng')).toBe('-46.7')
       expect(marcador.button.getAttribute('aria-label')).toBe('Veículo BRA-2E19 — Parado')
 
       // Forma mudou para quadrado com "P"

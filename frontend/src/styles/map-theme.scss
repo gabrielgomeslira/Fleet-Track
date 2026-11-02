@@ -72,6 +72,7 @@
 
 /* Marcadores acessíveis (elementos <button> com anel de foco duplo afastado) */
 .ft-map-marker {
+  position: absolute;
   padding: 0;
   border: none;
   background: transparent;

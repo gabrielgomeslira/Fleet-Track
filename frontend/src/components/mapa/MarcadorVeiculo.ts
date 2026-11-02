@@ -111,6 +111,9 @@ export class MarcadorVeiculo {
     btn.setAttribute('tabindex', '0')
     btn.setAttribute('data-vehicle-id', this.veiculo.id)
     btn.setAttribute('data-status', this.veiculo.status)
+    btn.setAttribute('data-plate', this.veiculo.plate)
+    btn.setAttribute('data-lat', String(this.veiculo.latitude))
+    btn.setAttribute('data-lng', String(this.veiculo.longitude))
     btn.setAttribute('aria-label', gerarAriaLabelMarcador(this.veiculo))
     btn.style.width = '26px'
     btn.style.height = '26px'
@@ -121,7 +124,6 @@ export class MarcadorVeiculo {
     btn.style.display = 'inline-flex'
     btn.style.alignItems = 'center'
     btn.style.justifyContent = 'center'
-    btn.style.position = 'relative'
     btn.style.outlineOffset = '2px'
 
     btn.appendChild(criarIconeFormaMarcador(this.veiculo.status))
@@ -154,6 +156,9 @@ export class MarcadorVeiculo {
 
     this.button.setAttribute('aria-label', gerarAriaLabelMarcador(novoVeiculo))
     this.button.setAttribute('data-status', novoVeiculo.status)
+    this.button.setAttribute('data-plate', novoVeiculo.plate)
+    this.button.setAttribute('data-lat', String(novoVeiculo.latitude))
+    this.button.setAttribute('data-lng', String(novoVeiculo.longitude))
 
     if (statusMudou) {
       this.button.className = `ft-map-marker ft-map-marker--${novoVeiculo.status}`

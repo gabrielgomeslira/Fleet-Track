@@ -51,60 +51,199 @@ const MIME_TYPES = {
   '.woff2': 'font/woff2',
 }
 
+// 10 veículos da demonstração (conforme SeedDemonstracao.cs)
+const DEMO_VEHICLES = [
+  {
+    id: 'v1',
+    plate: 'ABC-1234',
+    model: 'Volvo FH 540',
+    driverName: 'Carlos Silva',
+    latitude: -23.5505,
+    longitude: -46.6333,
+    speed: 72.5,
+    fuelLevel: 68,
+    status: 'em_rota',
+    updatedAt: '2026-11-01T22:00:00Z',
+  },
+  {
+    id: 'v2',
+    plate: 'DEF-5678',
+    model: 'Scania R450',
+    driverName: 'Maria Oliveira',
+    latitude: -22.9068,
+    longitude: -43.1729,
+    speed: 85.0,
+    fuelLevel: 45,
+    status: 'em_rota',
+    updatedAt: '2026-11-01T22:00:00Z',
+  },
+  {
+    id: 'v3',
+    plate: 'GHI-9012',
+    model: 'Mercedes Actros',
+    driverName: 'João Santos',
+    latitude: -25.4284,
+    longitude: -49.2733,
+    speed: 0,
+    fuelLevel: 92,
+    status: 'parado',
+    updatedAt: '2026-11-01T22:00:00Z',
+  },
+  {
+    id: 'v4',
+    plate: 'JKL-3456',
+    model: 'DAF XF',
+    driverName: 'Ana Costa',
+    latitude: -19.9167,
+    longitude: -43.9345,
+    speed: 63.2,
+    fuelLevel: 55,
+    status: 'em_rota',
+    updatedAt: '2026-11-01T22:00:00Z',
+  },
+  {
+    id: 'v5',
+    plate: 'MNO-7890',
+    model: 'Iveco Stralis',
+    driverName: 'Pedro Lima',
+    latitude: -23.5505,
+    longitude: -46.6333,
+    speed: 0,
+    fuelLevel: 30,
+    status: 'manutencao',
+    updatedAt: '2026-11-01T22:00:00Z',
+  },
+  {
+    id: 'v6',
+    plate: 'PQR-1122',
+    model: 'Volvo VM 270',
+    driverName: 'Fernanda Souza',
+    latitude: -21.1767,
+    longitude: -47.8208,
+    speed: 91.0,
+    fuelLevel: 72,
+    status: 'em_rota',
+    updatedAt: '2026-11-01T22:00:00Z',
+  },
+  {
+    id: 'v7',
+    plate: 'STU-3344',
+    model: 'Scania P320',
+    driverName: 'Ricardo Alves',
+    latitude: -30.0346,
+    longitude: -51.2177,
+    speed: 0,
+    fuelLevel: 88,
+    status: 'parado',
+    updatedAt: '2026-11-01T22:00:00Z',
+  },
+  {
+    id: 'v8',
+    plate: 'VWX-5566',
+    model: 'Mercedes Atego',
+    driverName: 'Juliana Rocha',
+    latitude: -15.7801,
+    longitude: -47.9292,
+    speed: 55.8,
+    fuelLevel: 61,
+    status: 'em_rota',
+    updatedAt: '2026-11-01T22:00:00Z',
+  },
+  {
+    id: 'v9',
+    plate: 'YZA-7788',
+    model: 'MAN TGX',
+    driverName: 'Lucas Ferreira',
+    latitude: -12.9714,
+    longitude: -38.5124,
+    speed: 78.3,
+    fuelLevel: 39,
+    status: 'em_rota',
+    updatedAt: '2026-11-01T22:00:00Z',
+  },
+  {
+    id: 'v10',
+    plate: 'BCD-9900',
+    model: 'Ford Cargo',
+    driverName: 'Camila Dias',
+    latitude: -3.7172,
+    longitude: -38.5433,
+    speed: 0,
+    fuelLevel: 95,
+    status: 'parado',
+    updatedAt: '2026-11-01T22:00:00Z',
+  },
+]
+
+let fundoAtivo = false
+
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://127.0.0.1:${PORT}`)
   const pathname = url.pathname
 
+  if (pathname === '/test-control/set-fundo') {
+    fundoAtivo = url.searchParams.get('ativo') === 'true'
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ fundoAtivo }))
+    return
+  }
+
   if (pathname === '/config/mapa.json') {
     res.writeHead(200, { 'Content-Type': 'application/json' })
-    res.end(
-      JSON.stringify({
-        desligado: true,
-        tilejsonUrl: '',
-        glyphsUrl: '',
-        styleUrl: '',
-        credit: 'OpenFreeMap|https://openfreemap.org',
-      }),
-    )
+    if (fundoAtivo) {
+      // Com fundo: styleUrl HTTPS que o MapLibre carrega sem chamar provedor externo
+      res.end(
+        JSON.stringify({
+          desligado: false,
+          tilejsonUrl: '',
+          glyphsUrl: '',
+          styleUrl: `https://127.0.0.1:${PORT}/mock-style.json`,
+          credit: 'OpenFreeMap|https://openfreemap.org',
+        }),
+      )
+    } else {
+      // Sem fundo: contingência pura desligada
+      res.end(
+        JSON.stringify({
+          desligado: true,
+          tilejsonUrl: '',
+          glyphsUrl: '',
+          styleUrl: '',
+          credit: 'OpenFreeMap|https://openfreemap.org',
+        }),
+      )
+    }
     return
   }
 
   if (pathname === '/api/vehicles') {
     res.writeHead(200, { 'Content-Type': 'application/json' })
-    res.end(
-      JSON.stringify([
-        {
-          id: 'v1',
-          plate: 'BRA-2E19',
-          model: 'Volvo FH 540',
-          driverName: 'Carlos Silva',
-          latitude: -23.5505,
-          longitude: -46.6333,
-          speed: 82,
-          fuelLevel: 78,
-          status: 'em_rota',
-          updatedAt: '2026-11-01T22:00:00Z',
-        },
-        {
-          id: 'v2',
-          plate: 'RIO-1A23',
-          model: 'Scania R450',
-          driverName: 'Ana Souza',
-          latitude: -22.9068,
-          longitude: -43.1729,
-          speed: 0,
-          fuelLevel: 45,
-          status: 'parado',
-          updatedAt: '2026-11-01T22:00:00Z',
-        },
-      ]),
-    )
+    res.end(JSON.stringify(DEMO_VEHICLES))
     return
   }
 
   if (pathname === '/api/deliveries') {
     res.writeHead(200, { 'Content-Type': 'application/json' })
-    res.end(JSON.stringify([]))
+    res.end(
+      JSON.stringify([
+        {
+          id: 'd1',
+          vehicleId: 'v1',
+          vehiclePlate: 'ABC-1234',
+          origin: 'São Paulo, SP',
+          destination: 'Rio de Janeiro, RJ',
+          status: 'em_transito',
+        },
+        {
+          id: 'd2',
+          vehicleId: 'v2',
+          vehiclePlate: 'DEF-5678',
+          origin: 'Rio de Janeiro, RJ',
+          destination: 'Belo Horizonte, MG',
+          status: 'em_transito',
+        },
+      ]),
+    )
     return
   }
 
@@ -112,16 +251,16 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json' })
     res.end(
       JSON.stringify({
-        totalVehicles: 2,
-        enRoute: 1,
-        stopped: 1,
-        maintenance: 0,
-        totalDeliveries: 0,
+        totalVehicles: 10,
+        enRoute: 6,
+        stopped: 3,
+        maintenance: 1,
+        totalDeliveries: 2,
         delivered: 0,
-        inTransit: 0,
+        inTransit: 2,
         pending: 0,
         cancelled: 0,
-        avgSpeed: 41,
+        avgSpeed: 44.5,
         deliveryRate: 100,
         deliveriesPerDay: [],
       }),
@@ -199,97 +338,311 @@ server.listen(PORT, async () => {
     await sendCommand('Page.enable')
     await sendCommand('Runtime.enable')
 
-    for (let i = 0; i < 30; i++) {
-      await new Promise((r) => setTimeout(r, 300))
-      const res = await sendCommand('Runtime.evaluate', {
-        expression: 'Boolean(document.querySelector(".map-container"))',
-        returnByValue: true,
-      })
-      if (res.result?.result?.value) break
+    async function aguardarMapaPronto() {
+      for (let i = 0; i < 40; i++) {
+        await new Promise((r) => setTimeout(r, 200))
+        const res = await sendCommand('Runtime.evaluate', {
+          expression:
+            'Boolean(window.__fleetMap && document.querySelectorAll(".ft-map-marker").length === 10)',
+          returnByValue: true,
+        })
+        if (res.result?.result?.value) return true
+      }
+      return false
     }
 
-    await new Promise((r) => setTimeout(r, 1000))
+    const mapaInicializado = await aguardarMapaPronto()
+    if (!mapaInicializado) {
+      console.error('Falha ao inicializar o mapa com os 10 veículos.')
+      allPassed = false
+    }
 
     const viewports = [
       { name: '1440x900', width: 1440, height: 900 },
       { name: '390x844', width: 390, height: 844 },
     ]
     const themes = ['dark', 'light']
+    const fundos = [
+      { name: 'sem fundo', ativo: false },
+      { name: 'com fundo', ativo: true },
+    ]
 
     console.log('================================================================================')
-    console.log('PROVA DE LAYOUT EM NAVEGADOR REAL (HEADLESS CHROMIUM / ZERO NOVAS DEPENDÊNCIAS)')
+    console.log('PROVA DE LAYOUT E POSICIONAMENTO REAL DE MARCADORES (MAPLIBRE GL / ZERO PROVEDOR)')
     console.log('================================================================================')
 
-    for (const vp of viewports) {
-      for (const th of themes) {
-        await sendCommand('Emulation.setDeviceMetricsOverride', {
-          width: vp.width,
-          height: vp.height,
-          deviceScaleFactor: 1,
-          mobile: vp.width < 500,
-        })
+    for (const fundo of fundos) {
+      // Configura modo de fundo no servidor e recarrega a página para instanciar mapa com o novo config
+      await fetch(`http://127.0.0.1:${PORT}/test-control/set-fundo?ativo=${fundo.ativo}`)
+      await sendCommand('Page.reload', { ignoreCache: true })
+      await aguardarMapaPronto()
 
-        await sendCommand('Runtime.evaluate', {
-          expression: `document.documentElement.setAttribute('data-theme', '${th}');`,
-        })
+      for (const vp of viewports) {
+        for (const th of themes) {
+          await sendCommand('Emulation.setDeviceMetricsOverride', {
+            width: vp.width,
+            height: vp.height,
+            deviceScaleFactor: 1,
+            mobile: vp.width < 500,
+          })
 
-        await sendCommand('Runtime.evaluate', {
-          expression: 'window.dispatchEvent(new Event("resize"));',
-        })
+          await sendCommand('Runtime.evaluate', {
+            expression: `document.documentElement.setAttribute('data-theme', '${th}');`,
+          })
 
-        await new Promise((r) => setTimeout(r, 400))
+          await sendCommand('Runtime.evaluate', {
+            expression: 'window.dispatchEvent(new Event("resize"));',
+          })
 
-        const res = await sendCommand('Runtime.evaluate', {
-          expression: `JSON.stringify((() => {
-            const container = document.querySelector('.map-container');
-            const canvasContainer = document.querySelector('.maplibregl-canvas-container');
-            const canvas = document.querySelector('canvas.maplibregl-canvas');
-            const fleetMap = document.querySelector('.fleet-map');
-            const markers = document.querySelectorAll('.ft-map-marker');
-            const cStyle = container ? window.getComputedStyle(container) : null;
-            const cRect = container ? container.getBoundingClientRect() : null;
-            const ccRect = canvasContainer ? canvasContainer.getBoundingClientRect() : null;
-            const cvRect = canvas ? canvas.getBoundingClientRect() : null;
-            const fmRect = fleetMap ? fleetMap.getBoundingClientRect() : null;
-            return {
-              className: container ? container.className : null,
-              computedHeight: cStyle ? cStyle.height : null,
-              boundingHeight: cRect ? Math.round(cRect.height) : 0,
-              boundingWidth: cRect ? Math.round(cRect.width) : 0,
-              canvasWidth: cvRect ? Math.round(cvRect.width) : 0,
-              canvasHeight: cvRect ? Math.round(cvRect.height) : 0,
-              canvasContainerHeight: ccRect ? Math.round(ccRect.height) : 0,
-              fleetMapHeight: fmRect ? Math.round(fmRect.height) : 0,
-              markerCount: markers.length
-            };
-          })())`,
-          returnByValue: true,
-        })
+          await new Promise((r) => setTimeout(r, 300))
 
-        let val = null
-        try {
-          val =
-            typeof res.result?.result?.value === 'string'
-              ? JSON.parse(res.result.result.value)
-              : res.result?.value
-        } catch {}
+          // 1. Verificação de dimensões do container e de cada marcador (posição real vs projeção map.project)
+          const res = await sendCommand('Runtime.evaluate', {
+            expression: `JSON.stringify((() => {
+              const map = window.__fleetMap;
+              if (!map) return { error: 'Mapa ausente' };
+              const container = document.querySelector('.map-container');
+              const canvasContainer = document.querySelector('.maplibregl-canvas-container');
+              const canvas = document.querySelector('canvas.maplibregl-canvas');
+              const markers = Array.from(document.querySelectorAll('.ft-map-marker'));
 
-        const parsedHeight = parseInt(val?.computedHeight || '0', 10)
-        const heightOk = parsedHeight >= 300
-        const markersOk = (val?.markerCount || 0) >= 2
+              const cStyle = container ? window.getComputedStyle(container) : null;
+              const cRect = container ? container.getBoundingClientRect() : null;
+              const ccRect = canvasContainer ? canvasContainer.getBoundingClientRect() : null;
+              const cvRect = canvas ? canvas.getBoundingClientRect() : null;
 
-        if (!heightOk || !markersOk) {
-          allPassed = false
+              const marcadoresInfo = markers.map((btn, index) => {
+                const bRect = btn.getBoundingClientRect();
+                const bStyle = window.getComputedStyle(btn);
+                const lat = parseFloat(btn.getAttribute('data-lat') || '0');
+                const lng = parseFloat(btn.getAttribute('data-lng') || '0');
+                const plate = btn.getAttribute('data-plate') || ('#' + index);
+
+                // Centro real no sistema de coordenadas do container do mapa
+                const realX = bRect.left + bRect.width / 2 - cRect.left;
+                const realY = bRect.top + bRect.height / 2 - cRect.top;
+
+                // Posição projetada esperada pelo MapLibre
+                const proj = map.project([lng, lat]);
+                const diffX = Math.abs(realX - proj.x);
+                const diffY = Math.abs(realY - proj.y);
+
+                return {
+                  index,
+                  plate,
+                  computedPosition: bStyle.position,
+                  computedDisplay: bStyle.display,
+                  realX: Math.round(realX * 10) / 10,
+                  realY: Math.round(realY * 10) / 10,
+                  projX: Math.round(proj.x * 10) / 10,
+                  projY: Math.round(proj.y * 10) / 10,
+                  diffX: Math.round(diffX * 10) / 10,
+                  diffY: Math.round(diffY * 10) / 10,
+                  // Tolerância estrita de poucos pixels (subpixel/arredondamento <= 2.5px)
+                  ok: diffX <= 2.5 && diffY <= 2.5,
+                };
+              });
+
+              return {
+                computedHeight: cStyle ? cStyle.height : null,
+                boundingHeight: cRect ? Math.round(cRect.height) : 0,
+                boundingWidth: cRect ? Math.round(cRect.width) : 0,
+                canvasContainerHeight: ccRect ? Math.round(ccRect.height) : 0,
+                canvasContainerWidth: ccRect ? Math.round(ccRect.width) : 0,
+                markerCount: markers.length,
+                marcadores: marcadoresInfo,
+                allMarkersOk: marcadoresInfo.length === 10 && marcadoresInfo.every(m => m.ok),
+              };
+            })())`,
+            returnByValue: true,
+          })
+
+          let val = null
+          try {
+            val =
+              typeof res.result?.result?.value === 'string'
+                ? JSON.parse(res.result.result.value)
+                : res.result?.value
+          } catch {}
+
+          const parsedHeight = parseInt(val?.computedHeight || '0', 10)
+          const heightOk = parsedHeight >= 300
+          const markersCountOk = (val?.markerCount || 0) === 10
+          const markersPosOk = Boolean(val?.allMarkersOk)
+
+          if (!heightOk || !markersCountOk || !markersPosOk) {
+            allPassed = false
+          }
+
+          console.log(`\nCenário: ${vp.name} | Tema: ${th} | Fundo: ${fundo.name}`)
+          console.log(
+            `  - .map-container: ${val?.boundingWidth}x${val?.boundingHeight} px -> ${heightOk ? 'OK' : 'FALHA'}`,
+          )
+          console.log(
+            `  - .maplibregl-canvas-container: ${val?.canvasContainerWidth}x${val?.canvasContainerHeight} px`,
+          )
+          console.log(
+            `  - Marcadores (${val?.markerCount}/10): ${markersPosOk ? 'TODOS NA POSIÇÃO CORRETA' : 'FALHA DE ALINHAMENTO'}`,
+          )
+
+          if (val?.marcadores) {
+            val.marcadores.forEach((m) => {
+              const statusStr = m.ok ? 'OK' : 'DESLOCADO'
+              console.log(
+                `      #${m.index} ${m.plate}: pos=${m.computedPosition} display=${m.computedDisplay} real=(${m.realX}, ${m.realY}) proj=(${m.projX}, ${m.projY}) diff=(${m.diffX}px, ${m.diffY}px) -> ${statusStr}`,
+              )
+            })
+          }
+
+          // 2. Teste de Zoom e Arraste (Pan)
+          await sendCommand('Runtime.evaluate', {
+            expression: `(() => {
+              const map = window.__fleetMap;
+              map.zoomTo(map.getZoom() + 1, { duration: 0 });
+              map.panBy([75, 45], { duration: 0 });
+            })()`,
+          })
+
+          await new Promise((r) => setTimeout(r, 250))
+
+          const resAposInteracao = await sendCommand('Runtime.evaluate', {
+            expression: `JSON.stringify((() => {
+              const map = window.__fleetMap;
+              const container = document.querySelector('.map-container');
+              const cRect = container.getBoundingClientRect();
+              const markers = Array.from(document.querySelectorAll('.ft-map-marker'));
+
+              const marcadores = markers.map((btn, index) => {
+                const bRect = btn.getBoundingClientRect();
+                const lat = parseFloat(btn.getAttribute('data-lat') || '0');
+                const lng = parseFloat(btn.getAttribute('data-lng') || '0');
+                const realX = bRect.left + bRect.width / 2 - cRect.left;
+                const realY = bRect.top + bRect.height / 2 - cRect.top;
+                const proj = map.project([lng, lat]);
+                const diffX = Math.abs(realX - proj.x);
+                const diffY = Math.abs(realY - proj.y);
+                return {
+                  index,
+                  ok: diffX <= 2.5 && diffY <= 2.5,
+                  diffX: Math.round(diffX * 10) / 10,
+                  diffY: Math.round(diffY * 10) / 10,
+                };
+              });
+
+              return {
+                allOk: marcadores.length === 10 && marcadores.every(m => m.ok),
+                falhas: marcadores.filter(m => !m.ok),
+              };
+            })())`,
+            returnByValue: true,
+          })
+
+          let valInteracao = null
+          try {
+            valInteracao =
+              typeof resAposInteracao.result?.result?.value === 'string'
+                ? JSON.parse(resAposInteracao.result.result.value)
+                : resAposInteracao.result?.value
+          } catch {}
+
+          if (!valInteracao?.allOk) {
+            allPassed = false
+            console.log(
+              `  - Pós Zoom e Arraste: FALHA (${valInteracao?.falhas?.length || 0} marcadores deslocados)`,
+            )
+          } else {
+            console.log(
+              '  - Pós Zoom e Arraste: OK (todos os 10 marcadores acompanharam a projeção)',
+            )
+          }
+        }
+      }
+    }
+
+    // 3. Teste de Acessibilidade: Abrir e Fechar Popup e Foco por Teclado
+    console.log(
+      '\n================================================================================',
+    )
+    console.log('VERIFICAÇÃO DE INTERATIVIDADE: POPUP E FOCO POR TECLADO (WCAG 2.2 AA)')
+    console.log('================================================================================')
+
+    const resAcessibilidade = await sendCommand('Runtime.evaluate', {
+      expression: `JSON.stringify((() => {
+        const markers = Array.from(document.querySelectorAll('.ft-map-marker'));
+        if (markers.length < 2) return { error: 'Marcadores insuficientes' };
+
+        const m0 = markers[0];
+        const m1 = markers[1];
+
+        // Passo 1: Foco inicial no marcador #0
+        m0.focus();
+        const focoInicialOk = document.activeElement === m0;
+
+        // Passo 2: Abrir popup via clique
+        m0.click();
+        const popup = document.querySelector('.ft-map-popup');
+        const popupAbriu = Boolean(popup && popup.parentElement);
+
+        // Passo 3: Foco capturado pelo botão de fechar do popup
+        const closeBtn = popup ? popup.querySelector('.maplibregl-popup-close-button') : null;
+        const closeFocado = document.activeElement === closeBtn;
+
+        // Passo 4: Fechar via tecla Escape
+        if (closeBtn) {
+          closeBtn.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        }
+        const popupFechou = !document.querySelector('.ft-map-popup');
+
+        // Passo 5: Foco devolvido ao marcador original
+        const focoRetornou = document.activeElement === m0;
+
+        // Passo 6: Tab no popup navega para o próximo marcador
+        m0.click();
+        const popupTab = document.querySelector('.ft-map-popup');
+        const closeBtnTab = popupTab ? popupTab.querySelector('.maplibregl-popup-close-button') : null;
+        let tabAcessivelOk = false;
+        if (closeBtnTab) {
+          closeBtnTab.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+          tabAcessivelOk = document.activeElement === m1;
         }
 
-        console.log(`\nCenário: ${vp.name} | Tema: ${th}`)
-        console.log(
-          `  - .map-container: ${val?.boundingWidth}x${val?.boundingHeight} px (computed: ${val?.computedHeight}) -> ${heightOk ? 'OK (>= 300px)' : 'FALHA (< 300px)'}`,
-        )
-        console.log(`  - canvas.maplibregl-canvas: ${val?.canvasWidth}x${val?.canvasHeight} px`)
-        console.log(`  - .fleet-map altura total: ${val?.fleetMapHeight} px`)
-        console.log(`  - Marcadores visíveis: ${val?.markerCount} -> ${markersOk ? 'OK' : 'FALHA'}`)
-      }
+        // Limpeza: fecha qualquer popup remanescente
+        const fecharRemanescente = document.querySelector('.maplibregl-popup-close-button');
+        if (fecharRemanescente) {
+          fecharRemanescente.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        }
+
+        return {
+          focoInicialOk,
+          popupAbriu,
+          closeFocado,
+          popupFechou,
+          focoRetornou,
+          tabAcessivelOk,
+          allOk: focoInicialOk && popupAbriu && closeFocado && popupFechou && focoRetornou && tabAcessivelOk,
+        };
+      })())`,
+      returnByValue: true,
+    })
+
+    let valA11y = null
+    try {
+      valA11y =
+        typeof resAcessibilidade.result?.result?.value === 'string'
+          ? JSON.parse(resAcessibilidade.result.result.value)
+          : resAcessibilidade.result?.value
+    } catch {}
+
+    if (!valA11y?.allOk) {
+      allPassed = false
+      console.log('Falha na interação de acessibilidade / popup:', valA11y)
+    } else {
+      console.log('  - Foco inicial no marcador: OK')
+      console.log('  - Abertura de popup por clique/teclado: OK')
+      console.log('  - Foco retido no botão Fechar do popup: OK')
+      console.log('  - Fechamento com tecla Escape: OK')
+      console.log('  - Foco retornado ao marcador de origem: OK')
+      console.log('  - Navegação Tab entre marcadores acessíveis: OK')
     }
 
     console.log(
@@ -297,10 +650,12 @@ server.listen(PORT, async () => {
     )
     if (allPassed) {
       console.log(
-        'RESULTADO: SUCESSO - Todas as medidas atendem aos critérios em todos os cenários.',
+        'RESULTADO: SUCESSO - Todas as medidas e posicionamentos atendem aos critérios em todos os cenários.',
       )
     } else {
-      console.error('RESULTADO: FALHA - Pelo menos um cenário não atingiu as medidas mínimas.')
+      console.error(
+        'RESULTADO: FALHA - Pelo menos um cenário não atingiu as medidas mínimas ou apresentou desvio de projeção.',
+      )
     }
     console.log(
       '================================================================================\n',
