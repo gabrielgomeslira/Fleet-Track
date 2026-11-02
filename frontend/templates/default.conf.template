@@ -6,6 +6,13 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    # O nginx:alpine nao mapeia .mjs (sairia application/octet-stream, sem gzip e
+    # bloqueado como modulo/worker). include repoe a tabela padrao; o types abaixo so soma.
+    include /etc/nginx/mime.types;
+    types {
+        text/javascript mjs;
+    }
+
     # Compressao: o orcamento do ADR-0015 e medido em gzip. WOFF2 e PNG ja sao comprimidos.
     gzip on;
     gzip_comp_level 5;
