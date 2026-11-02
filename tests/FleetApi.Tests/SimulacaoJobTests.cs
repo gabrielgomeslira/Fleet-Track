@@ -44,6 +44,7 @@ public sealed class SimulacaoJobTests(DbFixture banco) : TesteComBanco(banco)
             Id = Guid.NewGuid(), Plate = placa, Model = "Modelo", DriverName = "Motorista Ficticio", Status = status,
             Latitude = posicao.Latitude, Longitude = posicao.Longitude, Speed = velocidade, FuelLevel = combustivel,
             UpdatedAt = DateTime.UtcNow.AddHours(-1),
+            LastSignalAt = DateTime.UtcNow.AddHours(-1), // quem tem posição tem sinal (CHECK, ADR-0017)
         };
         db.Vehicles.Add(veiculo);
         await db.SaveChangesAsync();

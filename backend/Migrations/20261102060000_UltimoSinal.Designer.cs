@@ -91,10 +91,9 @@ namespace FleetApi.Migrations
                         .HasColumnName("id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<int>("FuelLevel")
+                    b.Property<int?>("FuelLevel")
                         .HasColumnType("integer")
-                        .HasColumnName("fuel_level")
-                        .HasDefaultValueSql("100");
+                        .HasColumnName("fuel_level");
 
                     b.Property<double>("Latitude")
                         .HasColumnType("double precision")
@@ -109,10 +108,9 @@ namespace FleetApi.Migrations
                         .HasColumnName("recorded_at")
                         .HasDefaultValueSql("NOW()");
 
-                    b.Property<double>("Speed")
+                    b.Property<double?>("Speed")
                         .HasColumnType("double precision")
-                        .HasColumnName("speed")
-                        .HasDefaultValueSql("0");
+                        .HasColumnName("speed");
 
                     b.Property<Guid>("VehicleId")
                         .HasColumnType("uuid")
@@ -141,10 +139,9 @@ namespace FleetApi.Migrations
                         .HasColumnType("character varying(150)")
                         .HasColumnName("driver_name");
 
-                    b.Property<int>("FuelLevel")
+                    b.Property<int?>("FuelLevel")
                         .HasColumnType("integer")
-                        .HasColumnName("fuel_level")
-                        .HasDefaultValueSql("100");
+                        .HasColumnName("fuel_level");
 
                     b.Property<DateTime?>("LastSignalAt")
                         .HasColumnType("timestamp with time zone")
@@ -152,13 +149,11 @@ namespace FleetApi.Migrations
 
                     b.Property<double?>("Latitude")
                         .HasColumnType("double precision")
-                        .HasColumnName("latitude")
-                        .HasDefaultValueSql("-23.55");
+                        .HasColumnName("latitude");
 
                     b.Property<double?>("Longitude")
                         .HasColumnType("double precision")
-                        .HasColumnName("longitude")
-                        .HasDefaultValueSql("-46.63");
+                        .HasColumnName("longitude");
 
                     b.Property<string>("Model")
                         .IsRequired()
@@ -172,10 +167,9 @@ namespace FleetApi.Migrations
                         .HasColumnType("character varying(10)")
                         .HasColumnName("plate");
 
-                    b.Property<double>("Speed")
+                    b.Property<double?>("Speed")
                         .HasColumnType("double precision")
-                        .HasColumnName("speed")
-                        .HasDefaultValueSql("0");
+                        .HasColumnName("speed");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -193,7 +187,12 @@ namespace FleetApi.Migrations
 
                     b.HasIndex("Plate", "Id");
 
-                    b.ToTable("vehicles", (string)null);
+                    b.ToTable("vehicles", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_vehicles_posicao_completa", "(latitude IS NULL) = (longitude IS NULL)");
+
+                            t.HasCheckConstraint("ck_vehicles_posicao_com_sinal", "latitude IS NULL OR last_signal_at IS NOT NULL");
+                        });
                 });
 
             modelBuilder.Entity("FleetApi.Models.Delivery", b =>

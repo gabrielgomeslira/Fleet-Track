@@ -42,15 +42,18 @@ public sealed class ExpurgoTests(DbFixture banco) : TesteComBanco(banco)
 
     private static async Task<Vehicle> CriarVeiculoAsync(
         string placa, double? latitude = -23.55, double? longitude = -46.63,
-        DateTime? ultimoSinal = null, DateTime? atualizadoEm = null)
+        DateTime? ultimoSinal = null)
     {
         await using var db = DbFixture.CriarContexto();
+        var comPosicao = latitude is not null;
         var veiculo = new Vehicle
         {
             Id = Guid.NewGuid(), Plate = placa, Model = "Modelo", DriverName = "Motorista Ficticio", Status = "em_rota",
-            Latitude = latitude, Longitude = longitude, Speed = 40, FuelLevel = 70,
-            UpdatedAt = atualizadoEm ?? ultimoSinal ?? Atras(TimeSpan.FromMinutes(1)),
-            LastSignalAt = ultimoSinal,
+            // Sem posição, sem velocidade (como o expurgo deixa); o combustível sobrevive.
+            Latitude = latitude, Longitude = longitude, Speed = comPosicao ? 40 : null, FuelLevel = 70,
+            UpdatedAt = ultimoSinal ?? Atras(TimeSpan.FromMinutes(1)),
+            // O CHECK do banco exige sinal para quem tem posição (ADR-0017).
+            LastSignalAt = ultimoSinal ?? (comPosicao ? Atras(TimeSpan.FromMinutes(1)) : null),
         };
         db.Vehicles.Add(veiculo);
         await db.SaveChangesAsync();
@@ -135,6 +138,9 @@ public sealed class ExpurgoTests(DbFixture banco) : TesteComBanco(banco)
         Assert.Null(depois.Latitude);
         Assert.Null(depois.Longitude);
         Assert.Equal(sinal, depois.LastSignalAt);
+        // A velocidade vai junto com a posição; o combustível fica (não é localização).
+        Assert.Null(depois.Speed);
+        Assert.Equal(70, depois.FuelLevel);
         // O resto da linha não muda: placa, status e a data de atualização.
         Assert.Equal("EXP-0003", depois.Plate);
         Assert.Equal(veiculo.UpdatedAt, depois.UpdatedAt);
@@ -167,16 +173,34 @@ public sealed class ExpurgoTests(DbFixture banco) : TesteComBanco(banco)
     }
 
     [Fact]
-    public async Task Sem_last_signal_at_o_updated_at_vale_como_ultimo_sinal()
+    public async Task Veiculo_que_nunca_enviou_sinal_nao_e_tocado_pelo_expurgo()
     {
-        var veiculo = await CriarVeiculoAsync("EXP-0006", -22.9, -43.1, ultimoSinal: null, atualizadoEm: Atras(TimeSpan.FromHours(50)));
+        var veiculo = await CriarVeiculoAsync("EXP-0006", latitude: null, longitude: null);
         using var servicos = Servicos();
 
-        await NovoJob(servicos).ExecutarCicloAsync(Dia, modoDemo: false);
+        var resultado = await NovoJob(servicos).ExecutarCicloAsync(Dia, modoDemo: false);
 
+        Assert.Equal(default, resultado);
         var depois = await LerVeiculoAsync(veiculo.Id);
-        Assert.Null(depois.Latitude);
         Assert.Null(depois.LastSignalAt); // o expurgo não inventa um sinal que ninguém registrou
+        Assert.Equal(70, depois.FuelLevel);
+    }
+
+    [Fact]
+    public async Task Corte_e_pelo_last_signal_at_e_nao_pela_ausencia_de_registro()
+    {
+        var antigo = await CriarVeiculoAsync("EXP-0012", -22.9, -43.1, ultimoSinal: Atras(TimeSpan.FromHours(30)));
+        var recente = await CriarVeiculoAsync("EXP-0013", -22.8, -43.0, ultimoSinal: Atras(TimeSpan.FromHours(1)));
+        // Os dois ainda têm registros; só o corte do sinal decide quem perde a posição.
+        await RegistrarAsync(antigo.Id, Atras(TimeSpan.FromHours(2)));
+        await RegistrarAsync(recente.Id, Atras(TimeSpan.FromHours(1)));
+        using var servicos = Servicos();
+
+        var resultado = await NovoJob(servicos).ExecutarCicloAsync(Dia, modoDemo: false);
+
+        Assert.Equal(new ResultadoExpurgo(0, 1), resultado);
+        Assert.Null((await LerVeiculoAsync(antigo.Id)).Latitude);
+        Assert.Equal(-22.8, (await LerVeiculoAsync(recente.Id)).Latitude);
     }
 
     [Fact]
@@ -312,6 +336,8 @@ public sealed class ExpurgoTests(DbFixture banco) : TesteComBanco(banco)
         var item = Assert.Single(lista.EnumerateArray());
         Assert.Equal(JsonValueKind.Null, item.GetProperty("latitude").ValueKind);
         Assert.Equal(JsonValueKind.Null, item.GetProperty("longitude").ValueKind);
+        Assert.Equal(JsonValueKind.Null, item.GetProperty("speed").ValueKind);
+        Assert.Equal(70, item.GetProperty("fuelLevel").GetInt32());
         Assert.Equal("EXP-0010", item.GetProperty("plate").GetString());
         Assert.Equal(JsonValueKind.Null, detalhe.GetProperty("latitude").ValueKind);
         Assert.Equal(JsonValueKind.Null, detalhe.GetProperty("longitude").ValueKind);

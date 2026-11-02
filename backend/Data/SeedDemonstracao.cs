@@ -144,7 +144,7 @@ public static class SeedDemonstracao
                     Latitude = v.Latitude!.Value + (aleatorio.NextDouble() - 0.5) * 0.01 * gs,
                     Longitude = v.Longitude!.Value + (aleatorio.NextDouble() - 0.5) * 0.01 * gs,
                     Speed = v.Status == "em_rota" ? 40 + aleatorio.NextDouble() * 60 : 0,
-                    FuelLevel = Math.Max(10, v.FuelLevel - gs),
+                    FuelLevel = Math.Max(10, v.FuelLevel!.Value - gs),
                     RecordedAt = agora - TimeSpan.FromMinutes(gs),
                 };
             }

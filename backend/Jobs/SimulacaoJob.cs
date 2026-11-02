@@ -90,7 +90,8 @@ public sealed class SimulacaoJob(
                 // Só quem está em rota e tem entrega com rota anda. Nenhuma posição é inventada.
                 var rota = veiculo.Status == "em_rota" && rotas.TryGetValue(veiculo.Id, out var r) ? r : null;
                 var novo = MotorDemo.Avancar(
-                    new EstadoVeiculo(latitude, longitude, veiculo.Speed, veiculo.FuelLevel),
+                    // Só entrada do motor: a velocidade e o combustível gravados abaixo são os do motor.
+                    new EstadoVeiculo(latitude, longitude, veiculo.Speed ?? 0, veiculo.FuelLevel ?? 100),
                     rota,
                     Intervalo);
 

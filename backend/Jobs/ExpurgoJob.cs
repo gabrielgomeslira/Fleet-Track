@@ -12,8 +12,8 @@ public readonly record struct ResultadoExpurgo(int RegistrosRemovidos, int Posic
 /// expurgo por banco: o lock consultivo de sessão faz quem não o obtém pular a vez.
 /// </summary>
 /// <remarks>
-/// Fora da demo, o veículo que fica sem nenhum registro e cujo último sinal passou do prazo perde
-/// latitude e longitude, mas mantém <c>last_signal_at</c>. Na demo o último registro de cada veículo
+/// Fora da demo, o veículo cujo último sinal (<c>last_signal_at</c>) passou do prazo perde latitude,
+/// longitude e velocidade, mas mantém <c>last_signal_at</c> e o combustível (ADR-0017). Na demo o último registro de cada veículo
 /// é preservado e nenhuma posição é zerada (o dado é fictício e a demo não pode esvaziar). O log traz
 /// só as quantidades: nunca placa, motorista, posição ou id.
 /// </remarks>
@@ -132,15 +132,15 @@ public sealed class ExpurgoJob(
     }
 
     /// <summary>
-    /// Zera a posição de quem ficou sem registro e tem o último sinal além do corte. O instante do
-    /// sinal (<c>last_signal_at</c>, ou <c>updated_at</c> se o escritor não o preencheu) não é tocado.
+    /// Anula posição e velocidade de quem tem o último sinal além do corte (o mesmo corte do DELETE,
+    /// ADR-0017). O corte é por <c>last_signal_at</c>, sem subconsulta por veículo. O instante do sinal
+    /// e o combustível não são tocados: combustível não é localização e o alerta usa a idade do sinal.
     /// </summary>
     private static Task<int> ExpirarPosicoesAsync(AppDbContext db, DateTime corte, CancellationToken ct) =>
         db.Database.ExecuteSqlAsync($"""
-            UPDATE vehicles v SET latitude = NULL, longitude = NULL
-            WHERE (v.latitude IS NOT NULL OR v.longitude IS NOT NULL)
-              AND COALESCE(v.last_signal_at, v.updated_at) < {corte}
-              AND NOT EXISTS (SELECT 1 FROM telemetry_records t WHERE t.vehicle_id = v.id)
+            UPDATE vehicles SET latitude = NULL, longitude = NULL, speed = NULL
+            WHERE last_signal_at < {corte}
+              AND (latitude IS NOT NULL OR longitude IS NOT NULL OR speed IS NOT NULL)
             """, ct);
 
     private static async Task<bool> ProximoTiqueAsync(PeriodicTimer temporizador, CancellationToken parada)

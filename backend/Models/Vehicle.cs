@@ -7,11 +7,14 @@ public class Vehicle
     public string Model { get; set; } = string.Empty;
     public string DriverName { get; set; } = string.Empty;
     public string Status { get; set; } = "parado";
-    /// <summary>Nulos quando a posição expirou (retenção) ou o veículo nunca enviou uma.</summary>
+    /// <summary>
+    /// Nulos quando a posição expirou (retenção) ou o veículo nunca enviou uma. Velocidade e
+    /// combustível também: sem leitura, sem dado (nunca 0 km/h nem 100% inventados, H-40).
+    /// </summary>
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }
-    public double Speed { get; set; }
-    public int FuelLevel { get; set; } = 100;
+    public double? Speed { get; set; }
+    public int? FuelLevel { get; set; }
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>

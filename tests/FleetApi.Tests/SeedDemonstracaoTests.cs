@@ -54,7 +54,7 @@ public sealed class SeedDemonstracaoTests(DbFixture banco) : TesteComBanco(banco
         Assert.Single(emManutencao);
         Assert.DoesNotContain(pontos, p => emManutencao.Contains(p.VehicleId));
         Assert.All(pontos, p => Assert.True(p.FuelLevel >= 10));
-        Assert.All(pontos.Where(p => p.Speed > 0), p => Assert.InRange(p.Speed, 40, 100));
+        Assert.All(pontos.Where(p => p.Speed > 0), p => Assert.InRange(p.Speed!.Value, 40, 100));
     }
 
     [Fact]

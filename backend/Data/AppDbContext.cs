@@ -24,7 +24,12 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Vehicle>(e =>
         {
-            e.ToTable("vehicles");
+            e.ToTable("vehicles", t =>
+            {
+                // Latitude e longitude andam juntas, e quem tem posição tem sinal (ADR-0017).
+                t.HasCheckConstraint("ck_vehicles_posicao_completa", "(latitude IS NULL) = (longitude IS NULL)");
+                t.HasCheckConstraint("ck_vehicles_posicao_com_sinal", "latitude IS NULL OR last_signal_at IS NOT NULL");
+            });
             e.HasKey(v => v.Id);
             e.Property(v => v.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
             e.Property(v => v.Plate).HasColumnName("plate").HasMaxLength(10);
@@ -32,14 +37,12 @@ public class AppDbContext : DbContext
             e.Property(v => v.DriverName).HasColumnName("driver_name").HasMaxLength(150);
             e.Property(v => v.Status).HasColumnName("status").HasMaxLength(20)
                 .HasDefaultValueSql("'parado'").ValueGeneratedNever();
-            e.Property(v => v.Latitude).HasColumnName("latitude")
-                .HasDefaultValueSql("-23.55").ValueGeneratedNever();
-            e.Property(v => v.Longitude).HasColumnName("longitude")
-                .HasDefaultValueSql("-46.63").ValueGeneratedNever();
-            e.Property(v => v.Speed).HasColumnName("speed")
-                .HasDefaultValueSql("0").ValueGeneratedNever();
-            e.Property(v => v.FuelLevel).HasColumnName("fuel_level")
-                .HasDefaultValueSql("100").ValueGeneratedNever();
+            // Posição, velocidade e combustível são anuláveis e sem valor padrão (ADR-0017): nulo é
+            // "sem dado", e um padrão inventaria um veículo em São Paulo a 0 km/h com tanque cheio.
+            e.Property(v => v.Latitude).HasColumnName("latitude");
+            e.Property(v => v.Longitude).HasColumnName("longitude");
+            e.Property(v => v.Speed).HasColumnName("speed");
+            e.Property(v => v.FuelLevel).HasColumnName("fuel_level");
             e.Property(v => v.UpdatedAt).HasColumnName("updated_at").HasColumnType(TipoInstante)
                 .HasDefaultValueSql("NOW()").ValueGeneratedNever();
             e.Property(v => v.LastSignalAt).HasColumnName("last_signal_at").HasColumnType(TipoInstante);
@@ -76,10 +79,8 @@ public class AppDbContext : DbContext
             e.Property(t => t.VehicleId).HasColumnName("vehicle_id");
             e.Property(t => t.Latitude).HasColumnName("latitude");
             e.Property(t => t.Longitude).HasColumnName("longitude");
-            e.Property(t => t.Speed).HasColumnName("speed")
-                .HasDefaultValueSql("0").ValueGeneratedNever();
-            e.Property(t => t.FuelLevel).HasColumnName("fuel_level")
-                .HasDefaultValueSql("100").ValueGeneratedNever();
+            e.Property(t => t.Speed).HasColumnName("speed");
+            e.Property(t => t.FuelLevel).HasColumnName("fuel_level");
             e.Property(t => t.RecordedAt).HasColumnName("recorded_at").HasColumnType(TipoInstante)
                 .HasDefaultValueSql("NOW()").ValueGeneratedNever();
             e.HasOne(t => t.Vehicle).WithMany(v => v.TelemetryRecords).HasForeignKey(t => t.VehicleId)
