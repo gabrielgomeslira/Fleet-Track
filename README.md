@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/images/logo.svg" alt="FleetTrack" width="270">
+
 # FleetTrack
 
 **Painel open source para acompanhar uma frota logística: onde está cada veículo, como andam as entregas e o que diz a telemetria.**
@@ -40,13 +42,17 @@ Por padrão, o navegador de quem abre o FleetTrack baixa o mapa de fundo vetoria
 
 ## Telas
 
-As imagens abaixo são capturas da versão atual rodando com os dados de demonstração.
+As imagens abaixo são capturas da versão atual rodando com os dados de demonstração, no tema claro. O painel também tem tema escuro e se adapta ao celular.
 
 ### Dashboard
 
 Indicadores da frota, mapa, entregas por dia nos últimos 14 dias, status dos veículos e as entregas mais recentes.
 
 ![Dashboard](docs/images/dashboard.png)
+
+No celular (390 px de largura):
+
+![Dashboard no celular](docs/images/dashboard-mobile.png)
 
 ### Veículos
 
@@ -216,3 +222,5 @@ Achou uma vulnerabilidade? Não abra issue pública: siga o [SECURITY.md](SECURI
 ## Licença
 
 [MIT](LICENSE) © Gabriel Gomes
+
+Créditos: interface com [IBM Carbon Design System](https://carbondesignsystem.com/) (Apache-2.0) e fonte [IBM Plex](https://www.ibm.com/plex/) (OFL-1.1). As capturas do mapa usam dados do OpenStreetMap, servidos pelo OpenFreeMap (© OpenMapTiles).
