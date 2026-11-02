@@ -41,6 +41,7 @@ public sealed class MigracoesTests(DbFixture banco) : TesteComBanco(banco)
     [InlineData("deliveries", "origin", "character varying", 200, "NO", null)]
     [InlineData("deliveries", "status", "character varying", 20, "NO", "'pendente'::character varying")]
     [InlineData("deliveries", "delivered_at", "timestamp with time zone", null, "YES", null)]
+    [InlineData("deliveries", "route_path", "jsonb", null, "YES", null)]
     [InlineData("telemetry_records", "recorded_at", "timestamp with time zone", null, "NO", "now()")]
     [InlineData("vehicles", "id", "uuid", null, "NO", "gen_random_uuid()")]
     [InlineData("deliveries", "id", "uuid", null, "NO", "gen_random_uuid()")]
@@ -101,6 +102,44 @@ public sealed class MigracoesTests(DbFixture banco) : TesteComBanco(banco)
         }
 
         Assert.Equal(3, await ContarTabelasDoModelo());
+    }
+
+    [Fact]
+    public async Task Rota_da_entrega_e_so_expansao_e_o_Down_remove_apenas_a_coluna()
+    {
+        await using var db = DbFixture.CriarContexto();
+        var migrador = db.GetService<IMigrator>();
+        var anterior = (await db.Database.GetAppliedMigrationsAsync()).Reverse().Skip(1).First();
+        Assert.EndsWith("_TimestamptzEIndices", anterior);
+
+        try
+        {
+            await migrador.MigrateAsync(anterior);
+            Assert.False(await ExisteColuna("deliveries", "route_path"));
+            // O resto do esquema continua de pé.
+            Assert.Equal(3, await ContarTabelasDoModelo());
+            Assert.True(await ExisteColuna("deliveries", "delivered_at"));
+        }
+        finally
+        {
+            await migrador.MigrateAsync();
+        }
+
+        Assert.True(await ExisteColuna("deliveries", "route_path"));
+    }
+
+    private static async Task<bool> ExisteColuna(string tabela, string coluna)
+    {
+        await using var conexao = new NpgsqlConnection(ApiFactory.ConexaoDeTeste);
+        await conexao.OpenAsync();
+        await using var cmd = new NpgsqlCommand(
+            """
+            SELECT count(*) FROM information_schema.columns
+            WHERE table_schema = current_schema() AND table_name = @t AND column_name = @c
+            """, conexao);
+        cmd.Parameters.AddWithValue("t", tabela);
+        cmd.Parameters.AddWithValue("c", coluna);
+        return (long)(await cmd.ExecuteScalarAsync())! == 1;
     }
 
     private static async Task<long> ContarTabelasDoModelo()

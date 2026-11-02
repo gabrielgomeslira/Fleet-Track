@@ -58,6 +58,7 @@ public class AppDbContext : DbContext
             e.Property(d => d.CreatedAt).HasColumnName("created_at").HasColumnType(TipoInstante)
                 .HasDefaultValueSql("NOW()").ValueGeneratedNever();
             e.Property(d => d.DeliveredAt).HasColumnName("delivered_at").HasColumnType(TipoInstante);
+            e.Property(d => d.RoutePath).HasColumnName("route_path").HasColumnType("jsonb");
             e.HasOne(d => d.Vehicle).WithMany(v => v.Deliveries).HasForeignKey(d => d.VehicleId)
                 .OnDelete(DeleteBehavior.NoAction);
             // Listagem paginada por cursor (created_at DESC, id DESC), com e sem filtro de status.

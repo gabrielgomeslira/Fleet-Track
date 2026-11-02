@@ -1,0 +1,276 @@
+{
+  "corredores": [
+    {
+      "id": "sp-rj",
+      "origem": "São Paulo, SP",
+      "destino": "Rio de Janeiro, RJ",
+      "sedes": ["São Paulo", "Guarulhos", "Jacareí", "São José dos Campos", "Taubaté", "Pindamonhangaba", "Aparecida", "Resende", "Barra Mansa", "Piraí", "Seropédica", "Rio de Janeiro"],
+      "rota": {
+        "type": "LineString",
+        "coordinates": [
+          [-46.6333, -23.5505],
+          [-46.5333, -23.4543],
+          [-45.9658, -23.305],
+          [-45.8841, -23.1896],
+          [-45.5556, -23.0204],
+          [-45.4616, -22.9239],
+          [-45.2305, -22.8497],
+          [-44.4468, -22.4689],
+          [-44.1714, -22.5441],
+          [-43.8993, -22.63],
+          [-43.7076, -22.7439],
+          [-43.1729, -22.9068]
+        ]
+      }
+    },
+    {
+      "id": "rj-bh",
+      "origem": "Rio de Janeiro, RJ",
+      "destino": "Belo Horizonte, MG",
+      "sedes": ["Rio de Janeiro", "Petrópolis", "Juiz de Fora", "Barbacena", "Conselheiro Lafaiete", "Itabirito", "Belo Horizonte"],
+      "rota": {
+        "type": "LineString",
+        "coordinates": [
+          [-43.1729, -22.9068],
+          [-43.1789, -22.505],
+          [-43.3503, -21.7642],
+          [-43.7703, -21.2258],
+          [-43.7861, -20.6603],
+          [-43.8003, -20.2528],
+          [-43.9345, -19.9167]
+        ]
+      }
+    },
+    {
+      "id": "bh-bsb",
+      "origem": "Belo Horizonte, MG",
+      "destino": "Brasília, DF",
+      "sedes": ["Belo Horizonte", "Sete Lagoas", "Paraopeba", "Três Marias", "João Pinheiro", "Paracatu", "Cristalina", "Luziânia", "Brasília"],
+      "rota": {
+        "type": "LineString",
+        "coordinates": [
+          [-43.9345, -19.9167],
+          [-44.2467, -19.4658],
+          [-44.4083, -19.2742],
+          [-45.2492, -18.2064],
+          [-46.1725, -17.7425],
+          [-46.8747, -17.2222],
+          [-47.6137, -16.7684],
+          [-47.9503, -16.2528],
+          [-47.9292, -15.7801]
+        ]
+      }
+    },
+    {
+      "id": "rp-sjrp",
+      "origem": "Ribeirão Preto, SP",
+      "destino": "São José do Rio Preto, SP",
+      "sedes": ["Ribeirão Preto", "Sertãozinho", "Bebedouro", "Monte Azul Paulista", "Cedral", "São José do Rio Preto"],
+      "rota": {
+        "type": "LineString",
+        "coordinates": [
+          [-47.8103, -21.1775],
+          [-47.9903, -21.1317],
+          [-48.4792, -20.9492],
+          [-48.6414, -20.9061],
+          [-49.2567, -20.9019],
+          [-49.3758, -20.8113]
+        ]
+      }
+    },
+    {
+      "id": "bsb-goi",
+      "origem": "Brasília, DF",
+      "destino": "Goiânia, GO",
+      "sedes": ["Brasília", "Alexânia", "Abadiânia", "Anápolis", "Goianápolis", "Goiânia"],
+      "rota": {
+        "type": "LineString",
+        "coordinates": [
+          [-47.9292, -15.7801],
+          [-48.5072, -16.0825],
+          [-48.7061, -16.1969],
+          [-48.9528, -16.3267],
+          [-49.02, -16.5128],
+          [-49.2648, -16.6869]
+        ]
+      }
+    },
+    {
+      "id": "ssa-rec",
+      "origem": "Salvador, BA",
+      "destino": "Recife, PE",
+      "sedes": ["Salvador", "Alagoinhas", "Entre Rios", "Esplanada", "Estância", "Aracaju", "Propriá", "São Miguel dos Campos", "Maceió", "Porto Calvo", "Palmares", "Vitória de Santo Antão", "Recife"],
+      "rota": {
+        "type": "LineString",
+        "coordinates": [
+          [-38.5014, -12.9714],
+          [-38.4192, -12.1356],
+          [-38.0864, -11.9419],
+          [-37.9439, -11.7961],
+          [-37.4383, -11.2686],
+          [-37.0731, -10.9472],
+          [-36.8431, -10.2119],
+          [-36.0975, -9.7819],
+          [-35.7089, -9.6498],
+          [-35.3989, -9.0511],
+          [-35.5919, -8.6836],
+          [-35.2914, -8.1186],
+          [-34.877, -8.0476]
+        ]
+      }
+    },
+    {
+      "id": "cwb-fln",
+      "origem": "Curitiba, PR",
+      "destino": "Florianópolis, SC",
+      "sedes": ["Curitiba", "Joinville", "Araquari", "Barra Velha", "Itajaí", "Biguaçu", "Florianópolis"],
+      "rota": {
+        "type": "LineString",
+        "coordinates": [
+          [-49.2733, -25.4284],
+          [-48.8487, -26.3045],
+          [-48.7197, -26.3775],
+          [-48.6908, -26.6358],
+          [-48.6619, -26.9078],
+          [-48.6556, -27.4942],
+          [-48.548, -27.5954]
+        ]
+      }
+    },
+    {
+      "id": "poa-cxs",
+      "origem": "Porto Alegre, RS",
+      "destino": "Caxias do Sul, RS",
+      "sedes": ["Porto Alegre", "Novo Hamburgo", "Dois Irmãos", "Nova Petrópolis", "Caxias do Sul"],
+      "rota": {
+        "type": "LineString",
+        "coordinates": [
+          [-51.2177, -30.0346],
+          [-51.1306, -29.6783],
+          [-51.0889, -29.5844],
+          [-51.1139, -29.3742],
+          [-51.1794, -29.1678]
+        ]
+      }
+    },
+    {
+      "id": "rj-sp",
+      "origem": "Rio de Janeiro, RJ",
+      "destino": "São Paulo, SP",
+      "sedes": ["Rio de Janeiro", "Seropédica", "Piraí", "Barra Mansa", "Resende", "Aparecida", "Pindamonhangaba", "Taubaté", "São José dos Campos", "Jacareí", "Guarulhos", "São Paulo"],
+      "rota": {
+        "type": "LineString",
+        "coordinates": [
+          [-43.1729, -22.9068],
+          [-43.7076, -22.7439],
+          [-43.8993, -22.63],
+          [-44.1714, -22.5441],
+          [-44.4468, -22.4689],
+          [-45.2305, -22.8497],
+          [-45.4616, -22.9239],
+          [-45.5556, -23.0204],
+          [-45.8841, -23.1896],
+          [-45.9658, -23.305],
+          [-46.5333, -23.4543],
+          [-46.6333, -23.5505]
+        ]
+      }
+    },
+    {
+      "id": "bh-rj",
+      "origem": "Belo Horizonte, MG",
+      "destino": "Rio de Janeiro, RJ",
+      "sedes": ["Belo Horizonte", "Itabirito", "Conselheiro Lafaiete", "Barbacena", "Juiz de Fora", "Petrópolis", "Rio de Janeiro"],
+      "rota": {
+        "type": "LineString",
+        "coordinates": [
+          [-43.9345, -19.9167],
+          [-43.8003, -20.2528],
+          [-43.7861, -20.6603],
+          [-43.7703, -21.2258],
+          [-43.3503, -21.7642],
+          [-43.1789, -22.505],
+          [-43.1729, -22.9068]
+        ]
+      }
+    },
+    {
+      "id": "bsb-bh",
+      "origem": "Brasília, DF",
+      "destino": "Belo Horizonte, MG",
+      "sedes": ["Brasília", "Luziânia", "Cristalina", "Paracatu", "João Pinheiro", "Três Marias", "Paraopeba", "Sete Lagoas", "Belo Horizonte"],
+      "rota": {
+        "type": "LineString",
+        "coordinates": [
+          [-47.9292, -15.7801],
+          [-47.9503, -16.2528],
+          [-47.6137, -16.7684],
+          [-46.8747, -17.2222],
+          [-46.1725, -17.7425],
+          [-45.2492, -18.2064],
+          [-44.4083, -19.2742],
+          [-44.2467, -19.4658],
+          [-43.9345, -19.9167]
+        ]
+      }
+    },
+    {
+      "id": "sjrp-rp",
+      "origem": "São José do Rio Preto, SP",
+      "destino": "Ribeirão Preto, SP",
+      "sedes": ["São José do Rio Preto", "Cedral", "Monte Azul Paulista", "Bebedouro", "Sertãozinho", "Ribeirão Preto"],
+      "rota": {
+        "type": "LineString",
+        "coordinates": [
+          [-49.3758, -20.8113],
+          [-49.2567, -20.9019],
+          [-48.6414, -20.9061],
+          [-48.4792, -20.9492],
+          [-47.9903, -21.1317],
+          [-47.8103, -21.1775]
+        ]
+      }
+    },
+    {
+      "id": "goi-bsb",
+      "origem": "Goiânia, GO",
+      "destino": "Brasília, DF",
+      "sedes": ["Goiânia", "Goianápolis", "Anápolis", "Abadiânia", "Alexânia", "Brasília"],
+      "rota": {
+        "type": "LineString",
+        "coordinates": [
+          [-49.2648, -16.6869],
+          [-49.02, -16.5128],
+          [-48.9528, -16.3267],
+          [-48.7061, -16.1969],
+          [-48.5072, -16.0825],
+          [-47.9292, -15.7801]
+        ]
+      }
+    },
+    {
+      "id": "rec-ssa",
+      "origem": "Recife, PE",
+      "destino": "Salvador, BA",
+      "sedes": ["Recife", "Vitória de Santo Antão", "Palmares", "Porto Calvo", "Maceió", "São Miguel dos Campos", "Propriá", "Aracaju", "Estância", "Esplanada", "Entre Rios", "Alagoinhas", "Salvador"],
+      "rota": {
+        "type": "LineString",
+        "coordinates": [
+          [-34.877, -8.0476],
+          [-35.2914, -8.1186],
+          [-35.5919, -8.6836],
+          [-35.3989, -9.0511],
+          [-35.7089, -9.6498],
+          [-36.0975, -9.7819],
+          [-36.8431, -10.2119],
+          [-37.0731, -10.9472],
+          [-37.4383, -11.2686],
+          [-37.9439, -11.7961],
+          [-38.0864, -11.9419],
+          [-38.4192, -12.1356],
+          [-38.5014, -12.9714]
+        ]
+      }
+    }
+  ]
+}

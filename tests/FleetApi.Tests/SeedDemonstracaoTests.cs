@@ -1,5 +1,6 @@
 using System.Text.Json;
 using FleetApi.Data;
+using FleetApi.Demo;
 using FleetApi.Models;
 using FleetApi.Tests.Infra;
 using Microsoft.EntityFrameworkCore;
@@ -52,6 +53,52 @@ public sealed class SeedDemonstracaoTests(DbFixture banco) : TesteComBanco(banco
         Assert.DoesNotContain(pontos, p => emManutencao.Contains(p.VehicleId));
         Assert.All(pontos, p => Assert.True(p.FuelLevel >= 10));
         Assert.All(pontos.Where(p => p.Speed > 0), p => Assert.InRange(p.Speed, 40, 100));
+    }
+
+    [Fact]
+    public async Task Entrega_em_transito_recebe_o_corredor_e_as_demais_ficam_sem_rota()
+    {
+        await using var db = DbFixture.CriarContexto();
+        await SeedDemonstracao.ExecutarAsync(db);
+        db.ChangeTracker.Clear();
+
+        var entregas = await db.Deliveries.ToListAsync();
+        var emTransito = entregas.Where(e => e.Status == "em_transito").ToList();
+
+        Assert.NotEmpty(emTransito);
+        Assert.All(emTransito, e =>
+        {
+            var esperado = Corredores.Obter(e.Origin, e.Destination);
+            Assert.NotNull(e.RoutePath);
+            // O jsonb normaliza espaços e ordem das chaves: compara o conteúdo, não o texto.
+            using var gravado = JsonDocument.Parse(e.RoutePath);
+            Assert.Equal("LineString", gravado.RootElement.GetProperty("type").GetString());
+            Assert.Equal(
+                esperado.Pontos,
+                gravado.RootElement.GetProperty("coordinates").EnumerateArray()
+                    .Select(c => new Ponto(c[0].GetDouble(), c[1].GetDouble())).ToList());
+        });
+        Assert.All(entregas.Where(e => e.Status != "em_transito"), e => Assert.Null(e.RoutePath));
+    }
+
+    [Fact]
+    public async Task Trajeto_nao_aparece_no_contrato_atual_da_api()
+    {
+        await using (var db = DbFixture.CriarContexto())
+        {
+            await SeedDemonstracao.ExecutarAsync(db);
+        }
+        using var cliente = Banco.Factory.CreateClient();
+
+        var lista = await cliente.GetStringAsync("/api/deliveries");
+        var emTransito = JsonDocument.Parse(lista).RootElement.EnumerateArray()
+            .First(e => e.GetProperty("status").GetString() == "em_transito").GetProperty("id").GetGuid();
+        var detalhe = await cliente.GetStringAsync($"/api/deliveries/{emTransito}");
+
+        // Expor o trajeto é da T-104; até lá o contrato não muda.
+        Assert.DoesNotContain("route", lista, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("route", detalhe, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("LineString", lista + detalhe);
     }
 
     [Fact]

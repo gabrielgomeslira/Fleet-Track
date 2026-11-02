@@ -52,6 +52,10 @@ namespace FleetApi.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("origin");
 
+                    b.Property<string>("RoutePath")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("route_path");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)

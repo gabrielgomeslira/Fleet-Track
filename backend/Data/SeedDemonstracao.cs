@@ -1,3 +1,4 @@
+using FleetApi.Demo;
 using FleetApi.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -83,6 +84,8 @@ public static class SeedDemonstracao
         {
             VehicleId = IdVeiculo(veiculo), Origin = origem, Destination = destino, Status = status,
             CreatedAt = agora - criada, DeliveredAt = entregue is { } t ? agora - t : null,
+            // Só a entrega em andamento tem trajeto; as demais ficam nulas (ADR-0016 item 12).
+            RoutePath = status == "em_transito" ? Corredores.Obter(origem, destino).GeoJson : null,
         };
 
         static TimeSpan H(double h) => TimeSpan.FromHours(h);
