@@ -11,6 +11,7 @@ import {
 import { api } from '../api'
 import { formatarHora, formatarInstante, formatarPercentual } from '../formatos'
 import type { Vehicle, TelemetryRecord } from '../types'
+import StatusBadge from './StatusBadge'
 
 interface Props {
   vehicles: Vehicle[]
@@ -81,9 +82,7 @@ export default function TelemetryPage({ vehicles }: Props) {
           <div className="stat-card">
             <span className="label">Status</span>
             <span className="value" style={{ fontSize: '1.2rem' }}>
-              <span className={`badge ${selected.status}`}>
-                {selected.status.replace('_', ' ')}
-              </span>
+              <StatusBadge status={selected.status} />
             </span>
           </div>
         </div>

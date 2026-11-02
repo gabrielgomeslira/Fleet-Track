@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react'
+import type { ComponentType, CSSProperties } from 'react'
 import {
   Movement,
   PauseOutline,
@@ -28,7 +28,12 @@ export type CarbonTagType =
 export interface StatusConfig {
   label: string
   tagType: CarbonTagType
-  icon: ComponentType<{ size?: number; className?: string; 'aria-hidden'?: boolean }>
+  icon: ComponentType<{
+    size?: number
+    className?: string
+    'aria-hidden'?: boolean
+    style?: CSSProperties
+  }>
   className?: string
   chartColor?: string
   mapMarkerColor?: string
@@ -101,14 +106,14 @@ export const STATUS_CONFIG: Record<string, StatusConfig> = {
 export function getStatusConfig(status?: string | null): StatusConfig {
   if (!status) {
     return {
-      label: '',
+      label: 'Sem status',
       tagType: 'gray',
       icon: WarningAlt,
     }
   }
 
   const normalizado = status.trim().toLowerCase()
-  if (normalizado in STATUS_CONFIG) {
+  if (Object.prototype.hasOwnProperty.call(STATUS_CONFIG, normalizado)) {
     return STATUS_CONFIG[normalizado]
   }
 

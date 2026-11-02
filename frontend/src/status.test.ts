@@ -67,11 +67,24 @@ describe('Fonte única de status e StatusBadge (T-79 / DS §4.1, H-21, H-22)', (
       expect(config.icon).toBeDefined()
     })
 
-    it('trata valores nulos e vazios sem quebrar', () => {
+    it('protege contra colisão de propriedades herdadas do Object.prototype', () => {
+      const protoKeys = ['toString', 'valueOf', 'constructor', '__proto__']
+      for (const key of protoKeys) {
+        expect(() => getStatusConfig(key)).not.toThrow()
+        const config = getStatusConfig(key)
+        expect(config.tagType).toBe('gray')
+        expect(config.label).toBe(key)
+        expect(typeof config.icon).toBe('object')
+      }
+    })
+
+    it('trata valores nulos e vazios sem quebrar devolvendo rótulo amigável', () => {
       expect(() => getStatusConfig(null)).not.toThrow()
       expect(() => getStatusConfig('')).not.toThrow()
       expect(getStatusConfig(null).tagType).toBe('gray')
       expect(getStatusConfig('').tagType).toBe('gray')
+      expect(getStatusConfig(null).label).toBe('Sem status')
+      expect(getStatusConfig('').label).toBe('Sem status')
     })
   })
 
@@ -84,10 +97,13 @@ describe('Fonte única de status e StatusBadge (T-79 / DS §4.1, H-21, H-22)', (
       expect(tag).not.toBeNull()
       expect(tag?.classList.contains('cds--tag--cyan')).toBe(true)
       expect(tag?.classList.contains('cds--tag--sm')).toBe(true)
-      expect(getStatusConfig('em_rota').icon).toBeDefined()
+
+      // Validação no DOM: o ícone vetorial SVG deve estar visível e renderizado no DOM
+      const svg = container.querySelector('svg')
+      expect(svg).not.toBeNull()
     })
 
-    it('renderiza o badge com a classe customizada para "parado"', () => {
+    it('renderiza o badge com a classe customizada e ícone para "parado"', () => {
       const { container } = render(React.createElement(StatusBadge, { status: 'parado' }))
       expect(screen.getByText('Parado')).toBeDefined()
 
@@ -95,15 +111,21 @@ describe('Fonte única de status e StatusBadge (T-79 / DS §4.1, H-21, H-22)', (
       expect(tag).not.toBeNull()
       expect(tag?.classList.contains('cds--tag--gray')).toBe(true)
       expect(tag?.classList.contains('ft-tag--parado')).toBe(true)
+
+      const svg = container.querySelector('svg')
+      expect(svg).not.toBeNull()
     })
 
-    it('renderiza badge desconhecido sem quebrar e com rótulo cru', () => {
+    it('renderiza badge desconhecido sem quebrar, com rótulo cru e ícone', () => {
       const { container } = render(React.createElement(StatusBadge, { status: 'custom_status' }))
       expect(screen.getByText('custom_status')).toBeDefined()
 
       const tag = container.querySelector('.cds--tag')
       expect(tag).not.toBeNull()
       expect(tag?.classList.contains('cds--tag--gray')).toBe(true)
+
+      const svg = container.querySelector('svg')
+      expect(svg).not.toBeNull()
     })
   })
 
