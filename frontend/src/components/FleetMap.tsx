@@ -8,7 +8,13 @@ import { carregarConfigMapa, type MapaConfig } from './mapa/configMapa'
 import { MarcadorVeiculo } from './mapa/MarcadorVeiculo'
 import { PopupVeiculo } from './mapa/PopupVeiculo'
 import { CreditoMapa } from './mapa/CreditoMapa'
-import { isWebGlSupported, PT_BR_LOCALE, type EstadoFundo } from './mapa/mapaUtils'
+import { AvisoFundo } from './mapa/AvisoFundo'
+import {
+  MaquinaEstadoFundo,
+  extrairStatusErro,
+  type EstadoFundo,
+} from './mapa/estadoFundo'
+import { isWebGlSupported, PT_BR_LOCALE } from './mapa/mapaUtils'
 import '../styles/map-theme.scss'
 
 // Configura o worker do MapLibre GL a partir da nossa própria origem ('self', ADR-0016 / CSP)
@@ -26,6 +32,7 @@ export default function FleetMap({ vehicles, deliveries = [] }: Props) {
   const [config, setConfig] = useState<MapaConfig | null>(null)
   const [webGlSuportado, setWebGlSuportado] = useState(true)
   const [mapaPronto, setMapaPronto] = useState(false)
+  const maquinaRef = useRef<MaquinaEstadoFundo | null>(null)
 
   const themeTokens = useThemeTokens()
   const mapTokens = useMemo(() => toMapTokens(themeTokens), [themeTokens])
@@ -53,6 +60,9 @@ export default function FleetMap({ vehicles, deliveries = [] }: Props) {
     carregarConfigMapa().then((cfg) => {
       if (!cancelado) {
         setConfig(cfg)
+        if (cfg.desligado) {
+          setEstadoFundo('desligado')
+        }
       }
     })
     return () => {
@@ -86,9 +96,62 @@ export default function FleetMap({ vehicles, deliveries = [] }: Props) {
     // Adiciona controle de zoom discreto no canto superior direito
     map.addControl(new NavigationControl({ showCompass: false }), 'top-right')
 
-    map.on('idle', () => {
-      setEstadoFundo(config.desligado ? 'desligado' : 'pronto')
+    // Conecta a máquina de estados pura do fundo cartográfico (ADR-0016 / T-94)
+    const maquina = new MaquinaEstadoFundo({
+      desligado: config.desligado,
+      isMapLoaded: () => {
+        try {
+          return map.loaded()
+        } catch {
+          return false
+        }
+      },
+      isAbaVisivel: () => {
+        if (typeof document === 'undefined') return true
+        return document.visibilityState === 'visible'
+      },
+      onEstadoChange: (novoEstado) => {
+        setEstadoFundo(novoEstado)
+      },
+      onExecutarRetry: () => {
+        try {
+          // Nova tentativa com diff: false para forçar releitura dos tiles e TileJSON (ADR-0016)
+          const estiloAtualizado = estiloMapa(mapTokens, config)
+          map.setStyle(estiloAtualizado, { diff: false })
+        } catch {
+          // Ignora se mapa foi desmontado
+        }
+      },
+      onReleituraTileJson: () => {
+        try {
+          const estiloAtualizado = estiloMapa(mapTokens, config)
+          map.setStyle(estiloAtualizado, { diff: false })
+        } catch {
+          // Ignora se mapa foi desmontado
+        }
+      },
     })
+
+    maquinaRef.current = maquina
+    maquina.iniciar()
+
+    map.on('idle', () => {
+      maquina.notificarIdle()
+    })
+
+    map.on('error', (e) => {
+      const errEvent = e as { sourceId?: string; error?: unknown }
+      maquina.notificarErro({
+        sourceId: errEvent.sourceId,
+        status: extrairStatusErro(e),
+        error: errEvent.error,
+      })
+    })
+
+    const handleVisibilityChange = () => {
+      maquina.notificarMudancaVisibilidade(document.visibilityState === 'visible')
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     mapRef.current = map
     setMapaPronto(true)
@@ -102,6 +165,9 @@ export default function FleetMap({ vehicles, deliveries = [] }: Props) {
       if (typeof window !== 'undefined') {
         delete (window as unknown as { __fleetMap?: MapLibreMap }).__fleetMap
       }
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      maquina.destruir()
+      maquinaRef.current = null
       marcadoresAtuais.forEach(({ marcador, popup }) => {
         popup.fechar()
         marcador.remover()
@@ -139,6 +205,11 @@ export default function FleetMap({ vehicles, deliveries = [] }: Props) {
     if (proximo) {
       proximo.marcador.button.focus()
     }
+  }, [])
+
+  // Disparo manual imediato de retry ("Tentar de novo")
+  const handleRetry = useCallback(() => {
+    maquinaRef.current?.tentarNovamenteAgora()
   }, [])
 
   // Sincronização e atualização dos marcadores veiculares
@@ -240,6 +311,8 @@ export default function FleetMap({ vehicles, deliveries = [] }: Props) {
       aria-label="Mapa operacional da frota"
     >
       <h3>Mapa da Frota</h3>
+
+      <AvisoFundo estado={estadoFundo} onRetry={handleRetry} />
 
       <div className="map-container" ref={mapContainerRef} data-testid="map-container">
         {!webGlSuportado && (

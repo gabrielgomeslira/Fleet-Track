@@ -288,3 +288,14 @@
     max-width: 440px;
   }
 }
+
+/* Notificação discreta de status e falha da base cartográfica (ADR-0016 / T-94) */
+.ft-aviso-fundo {
+  margin-bottom: 12px;
+  border-radius: 0 !important;
+
+  .cds--inline-notification__details,
+  .cds--actionable-notification__details {
+    border-radius: 0;
+  }
+}

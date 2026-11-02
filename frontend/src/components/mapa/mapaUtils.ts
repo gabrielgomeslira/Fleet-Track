@@ -1,4 +1,4 @@
-export type EstadoFundo = 'carregando' | 'pronto' | 'desligado' | 'indisponivel'
+export type EstadoFundo = 'carregando' | 'pronto' | 'falha' | 'desligado' | 'indisponivel'
 
 export interface CreditoItem {
   texto: string

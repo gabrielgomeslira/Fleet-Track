@@ -1,10 +1,61 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react'
 import FleetMap from './FleetMap'
 import * as MapaUtils from './mapa/mapaUtils'
+import * as ConfigMapa from './mapa/configMapa'
 import type { Vehicle, Delivery } from '../types'
 
 vi.mock('../styles/map-theme.scss', () => ({}))
+vi.mock('maplibre-gl/dist/maplibre-gl-worker.mjs?url', () => ({ default: 'worker.js' }))
+
+let mapEventHandlers: Record<string, ((e?: unknown) => void)[]> = {}
+let lastCreatedMapInstance: {
+  addControl: ReturnType<typeof vi.fn>
+  on: ReturnType<typeof vi.fn>
+  setStyle: ReturnType<typeof vi.fn>
+  remove: ReturnType<typeof vi.fn>
+  loaded: ReturnType<typeof vi.fn>
+} | null = null
+
+vi.mock('maplibre-gl', () => {
+  return {
+    setWorkerUrl: vi.fn(),
+    NavigationControl: vi.fn(),
+    Marker: vi.fn(function () {
+      return {
+        setLngLat: vi.fn().mockReturnThis(),
+        addTo: vi.fn().mockReturnThis(),
+        remove: vi.fn().mockReturnThis(),
+      }
+    }),
+    Popup: vi.fn(function () {
+      return {
+        setLngLat: vi.fn().mockReturnThis(),
+        setHTML: vi.fn().mockReturnThis(),
+        setDOMContent: vi.fn().mockReturnThis(),
+        addTo: vi.fn().mockReturnThis(),
+        remove: vi.fn().mockReturnThis(),
+        isOpen: vi.fn().mockReturnValue(false),
+        on: vi.fn().mockReturnThis(),
+      }
+    }),
+    Map: vi.fn(function () {
+      mapEventHandlers = {}
+      const instance = {
+        addControl: vi.fn(),
+        on: vi.fn((event: string, handler: (e?: unknown) => void) => {
+          if (!mapEventHandlers[event]) mapEventHandlers[event] = []
+          mapEventHandlers[event].push(handler)
+        }),
+        setStyle: vi.fn(),
+        remove: vi.fn(),
+        loaded: vi.fn().mockReturnValue(true),
+      }
+      lastCreatedMapInstance = instance
+      return instance
+    }),
+  }
+})
 
 const mockVehicles: Vehicle[] = [
   {
@@ -58,9 +109,11 @@ const mockDeliveries: Delivery[] = [
   },
 ]
 
-describe('FleetMap (T-81 / ADR-0016 / H-22)', () => {
+describe('FleetMap (T-81 / T-94 / ADR-0016 / H-22)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mapEventHandlers = {}
+    lastCreatedMapInstance = null
   })
 
   afterEach(() => {
@@ -95,5 +148,67 @@ describe('FleetMap (T-81 / ADR-0016 / H-22)', () => {
     expect(screen.getByText(/triângulo ▲/i)).toBeDefined()
     expect(screen.getByText(/quadrado ■ 'P'/i)).toBeDefined()
     expect(screen.getByText(/losango ◆ '!'/i)).toBeDefined()
+  })
+
+  it('quando fundo estiver desligado por configuração, grava data-estado-fundo="desligado" e exibe aviso fixo sem retry nem crédito', async () => {
+    vi.spyOn(MapaUtils, 'isWebGlSupported').mockReturnValue(true)
+    vi.spyOn(ConfigMapa, 'carregarConfigMapa').mockResolvedValue({
+      desligado: true,
+      tilejsonUrl: '',
+      glyphsUrl: '',
+      styleUrl: '',
+      credit: '',
+    })
+
+    render(<FleetMap vehicles={mockVehicles} deliveries={mockDeliveries} />)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('fleet-map').getAttribute('data-estado-fundo')).toBe('desligado')
+    })
+
+    expect(screen.getByText('Mapa de fundo desligado nesta instalação.')).toBeDefined()
+    expect(screen.queryByRole('button', { name: /Tentar de novo/i })).toBeNull()
+    expect(screen.queryByTestId('map-credit')).toBeNull()
+  })
+
+  it('ao ocorrer erro na fonte base do mapa, transiciona para data-estado-fundo="falha", exibe aviso e botão "Tentar de novo"', async () => {
+    vi.spyOn(MapaUtils, 'isWebGlSupported').mockReturnValue(true)
+    vi.spyOn(ConfigMapa, 'carregarConfigMapa').mockResolvedValue({
+      desligado: false,
+      tilejsonUrl: 'https://tiles.openfreemap.org/planet',
+      glyphsUrl: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
+      styleUrl: '',
+      credit: 'OpenFreeMap|https://openfreemap.org',
+    })
+
+    render(<FleetMap vehicles={mockVehicles} deliveries={mockDeliveries} />)
+
+    await waitFor(() => {
+      expect(lastCreatedMapInstance).not.toBeNull()
+    })
+
+    // Dispara erro na camada base dentro de act
+    act(() => {
+      const errorHandlers = mapEventHandlers['error'] || []
+      errorHandlers.forEach((handler) => handler({ sourceId: 'base', status: 503 }))
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('fleet-map').getAttribute('data-estado-fundo')).toBe('falha')
+    })
+
+    expect(screen.getByText('Mapa de fundo indisponível.')).toBeDefined()
+    expect(screen.getByText('Veículos e tabela seguem atualizados.')).toBeDefined()
+
+    const botaoRetry = screen.getByRole('button', { name: /Tentar de novo/i })
+    expect(botaoRetry).not.toBeNull()
+
+    // Clica em "Tentar de novo" para forçar retry imediato
+    act(() => {
+      fireEvent.click(botaoRetry)
+    })
+    expect(lastCreatedMapInstance!.setStyle).toHaveBeenCalledWith(expect.anything(), {
+      diff: false,
+    })
   })
 })
