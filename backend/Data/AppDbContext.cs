@@ -1,22 +1,14 @@
 using FleetApi.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace FleetApi.Data;
 
 public class AppDbContext : DbContext
 {
-    // Instantes continuam em "timestamp without time zone" até a T-14 migrá-los para timestamptz.
-    private const string TipoInstante = "timestamp without time zone";
+    private const string TipoInstante = "timestamp with time zone";
 
-    // O Npgsql recusa DateTime com Kind=Utc em "timestamp without time zone". Os controladores
-    // gravam DateTime.UtcNow, então a escrita descarta o Kind (o valor continua sendo UTC) e a
-    // leitura segue devolvendo Unspecified, como hoje. Sai junto com a migração da T-14.
-    private static readonly ValueConverter<DateTime, DateTime> InstanteSemFuso = new(
-        escrita => DateTime.SpecifyKind(
-            escrita.Kind == DateTimeKind.Local ? escrita.ToUniversalTime() : escrita, DateTimeKind.Unspecified),
-        leitura => leitura);
-
+    // Instantes são "timestamp with time zone" (UTC). O Npgsql grava DateTime só com Kind=Utc e
+    // devolve Kind=Utc na leitura, então a API serializa com "Z" (ADR-0009).
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     public DbSet<Vehicle> Vehicles => Set<Vehicle>();
@@ -48,8 +40,9 @@ public class AppDbContext : DbContext
                 .HasDefaultValueSql("0").ValueGeneratedNever();
             e.Property(v => v.FuelLevel).HasColumnName("fuel_level")
                 .HasDefaultValueSql("100").ValueGeneratedNever();
-            e.Property(v => v.UpdatedAt).HasColumnName("updated_at").HasColumnType(TipoInstante).HasConversion(InstanteSemFuso)
+            e.Property(v => v.UpdatedAt).HasColumnName("updated_at").HasColumnType(TipoInstante)
                 .HasDefaultValueSql("NOW()").ValueGeneratedNever();
+            e.HasIndex(v => new { v.Plate, v.Id });
         });
 
         modelBuilder.Entity<Delivery>(e =>
@@ -62,11 +55,15 @@ public class AppDbContext : DbContext
             e.Property(d => d.Destination).HasColumnName("destination").HasMaxLength(200);
             e.Property(d => d.Status).HasColumnName("status").HasMaxLength(20)
                 .HasDefaultValueSql("'pendente'").ValueGeneratedNever();
-            e.Property(d => d.CreatedAt).HasColumnName("created_at").HasColumnType(TipoInstante).HasConversion(InstanteSemFuso)
+            e.Property(d => d.CreatedAt).HasColumnName("created_at").HasColumnType(TipoInstante)
                 .HasDefaultValueSql("NOW()").ValueGeneratedNever();
-            e.Property(d => d.DeliveredAt).HasColumnName("delivered_at").HasColumnType(TipoInstante).HasConversion(InstanteSemFuso);
+            e.Property(d => d.DeliveredAt).HasColumnName("delivered_at").HasColumnType(TipoInstante);
             e.HasOne(d => d.Vehicle).WithMany(v => v.Deliveries).HasForeignKey(d => d.VehicleId)
                 .OnDelete(DeleteBehavior.NoAction);
+            // Listagem paginada por cursor (created_at DESC, id DESC), com e sem filtro de status.
+            // O índice por vehicle_id vem da chave estrangeira.
+            e.HasIndex(d => new { d.CreatedAt, d.Id }).IsDescending(true, true);
+            e.HasIndex(d => new { d.Status, d.CreatedAt }).IsDescending(false, true);
         });
 
         modelBuilder.Entity<TelemetryRecord>(e =>
@@ -81,10 +78,13 @@ public class AppDbContext : DbContext
                 .HasDefaultValueSql("0").ValueGeneratedNever();
             e.Property(t => t.FuelLevel).HasColumnName("fuel_level")
                 .HasDefaultValueSql("100").ValueGeneratedNever();
-            e.Property(t => t.RecordedAt).HasColumnName("recorded_at").HasColumnType(TipoInstante).HasConversion(InstanteSemFuso)
+            e.Property(t => t.RecordedAt).HasColumnName("recorded_at").HasColumnType(TipoInstante)
                 .HasDefaultValueSql("NOW()").ValueGeneratedNever();
             e.HasOne(t => t.Vehicle).WithMany(v => v.TelemetryRecords).HasForeignKey(t => t.VehicleId)
                 .OnDelete(DeleteBehavior.NoAction);
+            // Garantia de banco contra instante repetido do mesmo veículo (H-27) e índice da
+            // consulta "últimos registros do veículo". Cobre o prefixo vehicle_id da chave estrangeira.
+            e.HasIndex(t => new { t.VehicleId, t.RecordedAt }).IsUnique().IsDescending(false, true);
         });
     }
 }

@@ -32,12 +32,12 @@ namespace FleetApi.Migrations
                         .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("NOW()");
 
                     b.Property<DateTime?>("DeliveredAt")
-                        .HasColumnType("timestamp without time zone")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("delivered_at");
 
                     b.Property<string>("Destination")
@@ -67,6 +67,12 @@ namespace FleetApi.Migrations
 
                     b.HasIndex("VehicleId");
 
+                    b.HasIndex("CreatedAt", "Id")
+                        .IsDescending(true, true);
+
+                    b.HasIndex("Status", "CreatedAt")
+                        .IsDescending(false, true);
+
                     b.ToTable("deliveries", (string)null);
                 });
 
@@ -92,7 +98,7 @@ namespace FleetApi.Migrations
                         .HasColumnName("longitude");
 
                     b.Property<DateTime>("RecordedAt")
-                        .HasColumnType("timestamp without time zone")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("recorded_at")
                         .HasDefaultValueSql("NOW()");
 
@@ -107,7 +113,9 @@ namespace FleetApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("VehicleId");
+                    b.HasIndex("VehicleId", "RecordedAt")
+                        .IsUnique()
+                        .IsDescending(false, true);
 
                     b.ToTable("telemetry_records", (string)null);
                 });
@@ -166,11 +174,13 @@ namespace FleetApi.Migrations
                         .HasDefaultValueSql("'parado'");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at")
                         .HasDefaultValueSql("NOW()");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Plate", "Id");
 
                     b.ToTable("vehicles", (string)null);
                 });

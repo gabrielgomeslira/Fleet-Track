@@ -34,15 +34,22 @@ public class DashboardController : ControllerBase
             ? Math.Round((double)delivered / totalDeliveries * 100, 1)
             : 0;
 
-        // Fora da expressao: dentro dela o EF traduziria para now() (timestamptz) e nao compararia
-        // com a coluna timestamp. Como variavel, vira parametro com o mapeamento da coluna.
+        // Instantes sao timestamptz (UTC). O dia de cada entrega e calculado aqui, em UTC, e nao no
+        // SQL: o truncamento no banco seguiria o fuso da sessao e deslocaria o dia. Trazer so a
+        // coluna da janela de 14 dias mantem a consulta pequena.
         var corte = DateTime.UtcNow.AddDays(-14);
-        var deliveriesPerDay = await _db.Deliveries
+        var entregues = await _db.Deliveries
             .Where(d => d.DeliveredAt != null && d.DeliveredAt > corte)
-            .GroupBy(d => d.DeliveredAt!.Value.Date)
+            .Select(d => d.DeliveredAt!.Value)
+            .ToListAsync();
+
+        // DateOnly sai como "yyyy-MM-dd": dia puro, sem hora nem "Z", para o navegador nao
+        // deslocar o dia para o fuso local.
+        var deliveriesPerDay = entregues
+            .GroupBy(instante => DateOnly.FromDateTime(instante.ToUniversalTime()))
             .Select(g => new { Date = g.Key, Count = g.Count() })
             .OrderBy(x => x.Date)
-            .ToListAsync();
+            .ToList();
 
         return Ok(new
         {
