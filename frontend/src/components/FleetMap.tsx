@@ -9,12 +9,13 @@ import { MarcadorVeiculo } from './mapa/MarcadorVeiculo'
 import { PopupVeiculo } from './mapa/PopupVeiculo'
 import { CreditoMapa } from './mapa/CreditoMapa'
 import { AvisoFundo } from './mapa/AvisoFundo'
+import { MaquinaEstadoFundo, extrairStatusErro, type EstadoFundo } from './mapa/estadoFundo'
 import {
-  MaquinaEstadoFundo,
-  extrairStatusErro,
-  type EstadoFundo,
-} from './mapa/estadoFundo'
-import { isWebGlSupported, PT_BR_LOCALE } from './mapa/mapaUtils'
+  isWebGlSupported,
+  PT_BR_LOCALE,
+  calcularLimitesBrasilOuFrota,
+  MARGEM_ENQUADRAMENTO_PADRAO,
+} from './mapa/mapaUtils'
 import '../styles/map-theme.scss'
 
 // Configura o worker do MapLibre GL a partir da nossa própria origem ('self', ADR-0016 / CSP)
@@ -36,6 +37,15 @@ export default function FleetMap({ vehicles, deliveries = [] }: Props) {
 
   const themeTokens = useThemeTokens()
   const mapTokens = useMemo(() => toMapTokens(themeTokens), [themeTokens])
+
+  const vehiclesRef = useRef(vehicles)
+  useEffect(() => {
+    vehiclesRef.current = vehicles
+  }, [vehicles])
+
+  const limitesAtuaisRef = useRef<[[number, number], [number, number]]>(
+    calcularLimitesBrasilOuFrota(vehicles),
+  )
 
   // Armazena marcadores e popups indexados por vehicle.id para atualização in-place
   const marcadoresRef = useRef<
@@ -83,14 +93,26 @@ export default function FleetMap({ vehicles, deliveries = [] }: Props) {
 
     const estiloInicial = estiloMapa(mapTokens, config)
 
+    const limitesIniciais = calcularLimitesBrasilOuFrota(vehiclesRef.current)
+    limitesAtuaisRef.current = limitesIniciais
+
     const map = new MapLibreMap({
       container: mapContainerRef.current,
       style: estiloInicial,
-      center: [-47.93, -15.78], // Enquadramento centrado no Brasil (longitude, latitude)
-      zoom: 3.5,
+      bounds: limitesIniciais,
+      fitBoundsOptions: {
+        padding: MARGEM_ENQUADRAMENTO_PADRAO,
+        duration: 0,
+      },
       maxZoom: 16,
       attributionControl: false, // Atribuição automática desligada; usamos nosso CreditoMapa seguro
       locale: PT_BR_LOCALE,
+    })
+
+    // Garante aplicação imediata do enquadramento com margem em desktop e celular (ADR-0016 / T-94)
+    map.fitBounds(limitesIniciais, {
+      padding: MARGEM_ENQUADRAMENTO_PADRAO,
+      duration: 0,
     })
 
     // Adiciona controle de zoom discreto no canto superior direito
@@ -153,10 +175,27 @@ export default function FleetMap({ vehicles, deliveries = [] }: Props) {
     }
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
+    const enquadrar = () => {
+      if (!mapRef.current) return
+      mapRef.current.resize()
+      const limites = calcularLimitesBrasilOuFrota(vehiclesRef.current)
+      limitesAtuaisRef.current = limites
+      mapRef.current.fitBounds(limites, {
+        padding: MARGEM_ENQUADRAMENTO_PADRAO,
+        duration: 0,
+      })
+    }
+
+    const handleResize = () => {
+      enquadrar()
+    }
+    window.addEventListener('resize', handleResize)
+
     mapRef.current = map
     setMapaPronto(true)
     if (typeof window !== 'undefined') {
       ;(window as unknown as { __fleetMap?: MapLibreMap }).__fleetMap = map
+      ;(window as unknown as { __fleetMapEnquadrar?: () => void }).__fleetMapEnquadrar = enquadrar
     }
     const marcadoresAtuais = marcadoresRef.current
 
@@ -164,7 +203,9 @@ export default function FleetMap({ vehicles, deliveries = [] }: Props) {
       setMapaPronto(false)
       if (typeof window !== 'undefined') {
         delete (window as unknown as { __fleetMap?: MapLibreMap }).__fleetMap
+        delete (window as unknown as { __fleetMapEnquadrar?: () => void }).__fleetMapEnquadrar
       }
+      window.removeEventListener('resize', handleResize)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       maquina.destruir()
       maquinaRef.current = null
@@ -216,6 +257,24 @@ export default function FleetMap({ vehicles, deliveries = [] }: Props) {
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
+
+    // Só amplia o enquadramento se um veículo cair fora das fronteiras já enquadradas (ADR-0016 / T-94)
+    const novosLimites = calcularLimitesBrasilOuFrota(vehicles)
+    const [atualSW, atualNE] = limitesAtuaisRef.current
+    const [novoSW, novoNE] = novosLimites
+    const expandiu =
+      novoSW[0] < atualSW[0] ||
+      novoSW[1] < atualSW[1] ||
+      novoNE[0] > atualNE[0] ||
+      novoNE[1] > atualNE[1]
+
+    if (expandiu) {
+      limitesAtuaisRef.current = novosLimites
+      map.fitBounds(novosLimites, {
+        padding: MARGEM_ENQUADRAMENTO_PADRAO,
+        duration: 0,
+      })
+    }
 
     // Mapeamento de entregas ativas por id ou placa do veículo
     const entregaPorVeiculo = new Map<string, Delivery>()
@@ -332,13 +391,7 @@ export default function FleetMap({ vehicles, deliveries = [] }: Props) {
       {/* Legenda em texto com a forma de cada status (R-COR / WCAG 2.2 AA) */}
       <div className="map-legend" role="list" aria-label="Legenda de status dos veículos no mapa">
         <span className="map-legend-item" role="listitem">
-          <svg
-            viewBox="0 0 24 24"
-            width="14"
-            height="14"
-            aria-hidden="true"
-            focusable="false"
-          >
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false">
             <polygon
               points="12,2 22,21 2,21"
               fill="var(--ft-map-marker-enroute, #33b1ff)"
@@ -350,13 +403,7 @@ export default function FleetMap({ vehicles, deliveries = [] }: Props) {
         </span>
 
         <span className="map-legend-item" role="listitem">
-          <svg
-            viewBox="0 0 24 24"
-            width="14"
-            height="14"
-            aria-hidden="true"
-            focusable="false"
-          >
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false">
             <rect
               x="2"
               y="2"
@@ -382,13 +429,7 @@ export default function FleetMap({ vehicles, deliveries = [] }: Props) {
         </span>
 
         <span className="map-legend-item" role="listitem">
-          <svg
-            viewBox="0 0 24 24"
-            width="14"
-            height="14"
-            aria-hidden="true"
-            focusable="false"
-          >
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false">
             <polygon
               points="12,2 22,12 12,22 2,12"
               fill="var(--ft-map-marker-maintenance, #da1e28)"

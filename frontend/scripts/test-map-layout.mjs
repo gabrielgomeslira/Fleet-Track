@@ -427,6 +427,13 @@ server.listen(PORT, async () => {
                 const diffX = Math.abs(realX - proj.x);
                 const diffY = Math.abs(realY - proj.y);
 
+                // Marcador inteiramente dentro da área visível do container do mapa (sem ser cortado, ADR-0016 / T-94)
+                const dentro =
+                  bRect.left >= cRect.left &&
+                  bRect.right <= cRect.right &&
+                  bRect.top >= cRect.top &&
+                  bRect.bottom <= cRect.bottom;
+
                 return {
                   index,
                   plate,
@@ -438,8 +445,9 @@ server.listen(PORT, async () => {
                   projY: Math.round(proj.y * 10) / 10,
                   diffX: Math.round(diffX * 10) / 10,
                   diffY: Math.round(diffY * 10) / 10,
-                  // Tolerância estrita de poucos pixels (subpixel/arredondamento <= 2.5px)
-                  ok: diffX <= 2.5 && diffY <= 2.5,
+                  dentro,
+                  // Tolerância estrita de poucos pixels (subpixel/arredondamento <= 2.5px) e dentro da área visível
+                  ok: diffX <= 2.5 && diffY <= 2.5 && dentro,
                 };
               });
 
@@ -451,6 +459,7 @@ server.listen(PORT, async () => {
                 canvasContainerWidth: ccRect ? Math.round(ccRect.width) : 0,
                 markerCount: markers.length,
                 marcadores: marcadoresInfo,
+                allMarkersInside: marcadoresInfo.length === 10 && marcadoresInfo.every(m => m.dentro),
                 allMarkersOk: marcadoresInfo.length === 10 && marcadoresInfo.every(m => m.ok),
               };
             })())`,
@@ -469,8 +478,9 @@ server.listen(PORT, async () => {
           const heightOk = parsedHeight >= 300
           const markersCountOk = (val?.markerCount || 0) === 10
           const markersPosOk = Boolean(val?.allMarkersOk)
+          const markersInsideOk = Boolean(val?.allMarkersInside)
 
-          if (!heightOk || !markersCountOk || !markersPosOk) {
+          if (!heightOk || !markersCountOk || !markersPosOk || !markersInsideOk) {
             allPassed = false
           }
 
@@ -482,14 +492,17 @@ server.listen(PORT, async () => {
             `  - .maplibregl-canvas-container: ${val?.canvasContainerWidth}x${val?.canvasContainerHeight} px`,
           )
           console.log(
-            `  - Marcadores (${val?.markerCount}/10): ${markersPosOk ? 'TODOS NA POSIÇÃO CORRETA' : 'FALHA DE ALINHAMENTO'}`,
+            `  - Vista inicial: todos os marcadores dentro da área útil (${val?.markerCount}/10): ${markersInsideOk ? 'TODOS DENTRO DA ÁREA DO MAPA' : 'FALHA: MARCADORES FORA DA ÁREA OU CORTADOS'}`,
+          )
+          console.log(
+            `  - Alinhamento de projeção (${val?.markerCount}/10): ${markersPosOk ? 'TODOS NA POSIÇÃO CORRETA' : 'FALHA DE ALINHAMENTO'}`,
           )
 
           if (val?.marcadores) {
             val.marcadores.forEach((m) => {
-              const statusStr = m.ok ? 'OK' : 'DESLOCADO'
+              const statusStr = m.ok ? 'OK' : !m.dentro ? 'CORTADO/FORA' : 'DESLOCADO'
               console.log(
-                `      #${m.index} ${m.plate}: pos=${m.computedPosition} display=${m.computedDisplay} real=(${m.realX}, ${m.realY}) proj=(${m.projX}, ${m.projY}) diff=(${m.diffX}px, ${m.diffY}px) -> ${statusStr}`,
+                `      #${m.index} ${m.plate}: pos=(${m.realX}, ${m.realY}) proj=(${m.projX}, ${m.projY}) dentro=${m.dentro ? 'SIM' : 'NÃO'} -> ${statusStr}`,
               )
             })
           }
@@ -555,6 +568,16 @@ server.listen(PORT, async () => {
               '  - Pós Zoom e Arraste: OK (todos os 10 marcadores acompanharam a projeção)',
             )
           }
+
+          // Restaura o enquadramento inicial para o próximo cenário (ADR-0016 / T-94)
+          await sendCommand('Runtime.evaluate', {
+            expression: `(() => {
+              if (window.__fleetMapEnquadrar) {
+                window.__fleetMapEnquadrar();
+              }
+            })()`,
+          })
+          await new Promise((r) => setTimeout(r, 200))
         }
       }
     }

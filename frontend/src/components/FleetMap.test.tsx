@@ -15,6 +15,8 @@ let lastCreatedMapInstance: {
   setStyle: ReturnType<typeof vi.fn>
   remove: ReturnType<typeof vi.fn>
   loaded: ReturnType<typeof vi.fn>
+  fitBounds: ReturnType<typeof vi.fn>
+  resize: ReturnType<typeof vi.fn>
 } | null = null
 
 vi.mock('maplibre-gl', () => {
@@ -50,6 +52,8 @@ vi.mock('maplibre-gl', () => {
         setStyle: vi.fn(),
         remove: vi.fn(),
         loaded: vi.fn().mockReturnValue(true),
+        fitBounds: vi.fn().mockReturnThis(),
+        resize: vi.fn().mockReturnThis(),
       }
       lastCreatedMapInstance = instance
       return instance
@@ -210,5 +214,67 @@ describe('FleetMap (T-81 / T-94 / ADR-0016 / H-22)', () => {
     expect(lastCreatedMapInstance!.setStyle).toHaveBeenCalledWith(expect.anything(), {
       diff: false,
     })
+  })
+
+  it('enquadra o Brasil inteiro com fitBounds e margem de 24px na inicialização (ADR-0016 / T-94)', async () => {
+    vi.spyOn(MapaUtils, 'isWebGlSupported').mockReturnValue(true)
+    vi.spyOn(ConfigMapa, 'carregarConfigMapa').mockResolvedValue({
+      desligado: false,
+      tilejsonUrl: 'https://tiles.openfreemap.org/planet',
+      glyphsUrl: '',
+      styleUrl: '',
+      credit: 'OpenFreeMap',
+    })
+
+    render(<FleetMap vehicles={mockVehicles} deliveries={mockDeliveries} />)
+
+    await waitFor(() => {
+      expect(lastCreatedMapInstance).not.toBeNull()
+      expect(lastCreatedMapInstance!.fitBounds).toHaveBeenCalledWith(
+        [
+          [-73.99, -33.75],
+          [-34.79, 5.27],
+        ],
+        {
+          padding: 24,
+          duration: 0,
+        },
+      )
+    })
+  })
+
+  it('re-executa fitBounds ao disparar o evento resize na janela', async () => {
+    vi.spyOn(MapaUtils, 'isWebGlSupported').mockReturnValue(true)
+    vi.spyOn(ConfigMapa, 'carregarConfigMapa').mockResolvedValue({
+      desligado: false,
+      tilejsonUrl: 'https://tiles.openfreemap.org/planet',
+      glyphsUrl: '',
+      styleUrl: '',
+      credit: 'OpenFreeMap',
+    })
+
+    render(<FleetMap vehicles={mockVehicles} deliveries={mockDeliveries} />)
+
+    await waitFor(() => {
+      expect(lastCreatedMapInstance).not.toBeNull()
+    })
+
+    lastCreatedMapInstance!.fitBounds.mockClear()
+
+    act(() => {
+      window.dispatchEvent(new Event('resize'))
+    })
+
+    expect(lastCreatedMapInstance!.resize).toHaveBeenCalled()
+    expect(lastCreatedMapInstance!.fitBounds).toHaveBeenCalledWith(
+      [
+        [-73.99, -33.75],
+        [-34.79, 5.27],
+      ],
+      {
+        padding: 24,
+        duration: 0,
+      },
+    )
   })
 })

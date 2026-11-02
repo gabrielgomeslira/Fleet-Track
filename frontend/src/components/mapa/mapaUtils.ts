@@ -1,5 +1,64 @@
 export type EstadoFundo = 'carregando' | 'pronto' | 'falha' | 'desligado' | 'indisponivel'
 
+/**
+ * Limites geográficos continentais padrão do Brasil (IBGE / RFC 7946):
+ * Sudoeste: Serra da Contamana / Barra do Chuí [-73.99, -33.75]
+ * Nordeste: Ponta do Seixas / Monte Caburaí [-34.79, 5.27]
+ * Formato LngLatBoundsLike: [[oeste, sul], [leste, norte]]
+ */
+export const LIMITES_BRASIL: [[number, number], [number, number]] = [
+  [-73.99, -33.75],
+  [-34.79, 5.27],
+]
+
+/**
+ * Margem mínima em pixels para garantir que nenhum marcador veicular
+ * (26x26 px, raio 13px + anel de foco) seja cortado na borda do mapa em desktop ou celular.
+ */
+export const MARGEM_ENQUADRAMENTO_PADRAO = 24
+
+export interface PosicaoCoordenada {
+  latitude: number | null
+  longitude: number | null
+}
+
+/**
+ * Enquadramento inicial pelo Brasil com fitBounds e margem (ADR-0016 / T-94).
+ * O Brasil é a base geográfica fixa (não depende dos dados dos veículos para definir o Brasil).
+ * Só amplia o retângulo envolvente se algum veículo estiver fora dos limites do Brasil.
+ */
+export function calcularLimitesBrasilOuFrota(
+  veiculos?: PosicaoCoordenada[],
+): [[number, number], [number, number]] {
+  let minLng = LIMITES_BRASIL[0][0]
+  let minLat = LIMITES_BRASIL[0][1]
+  let maxLng = LIMITES_BRASIL[1][0]
+  let maxLat = LIMITES_BRASIL[1][1]
+
+  if (veiculos && veiculos.length > 0) {
+    for (const v of veiculos) {
+      if (
+        v.latitude !== null &&
+        v.longitude !== null &&
+        typeof v.latitude === 'number' &&
+        typeof v.longitude === 'number' &&
+        !isNaN(v.latitude) &&
+        !isNaN(v.longitude)
+      ) {
+        if (v.longitude < minLng) minLng = v.longitude
+        if (v.longitude > maxLng) maxLng = v.longitude
+        if (v.latitude < minLat) minLat = v.latitude
+        if (v.latitude > maxLat) maxLat = v.latitude
+      }
+    }
+  }
+
+  return [
+    [minLng, minLat],
+    [maxLng, maxLat],
+  ]
+}
+
 export interface CreditoItem {
   texto: string
   link?: string
@@ -30,9 +89,9 @@ export function isWebGlSupported(): boolean {
     const canvas = document.createElement('canvas')
     return Boolean(
       window.WebGLRenderingContext &&
-        (canvas.getContext('webgl') ||
-          canvas.getContext('experimental-webgl') ||
-          canvas.getContext('webgl2')),
+      (canvas.getContext('webgl') ||
+        canvas.getContext('experimental-webgl') ||
+        canvas.getContext('webgl2')),
     )
   } catch {
     return false
