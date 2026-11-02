@@ -323,7 +323,7 @@ export default function FleetMap({ vehicles, deliveries = [] }: Props) {
             if (par.popup.isOpen()) {
               par.popup.fechar()
               popupAbertoIdRef.current = null
-            } else {
+            } else if (veiculo.longitude !== null && veiculo.latitude !== null) {
               par.popup.popup.setLngLat([veiculo.longitude, veiculo.latitude])
               par.popup.popup.addTo(map)
               popupAbertoIdRef.current = veiculo.id

@@ -148,7 +148,7 @@ export class PopupVeiculo {
     this.contentContainer.replaceWith(novoConteudo)
     this.contentContainer = novoConteudo
 
-    if (this.popup.isOpen()) {
+    if (this.popup.isOpen() && novoVeiculo.longitude !== null && novoVeiculo.latitude !== null) {
       this.popup.setLngLat([novoVeiculo.longitude, novoVeiculo.latitude])
     }
   }

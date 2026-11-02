@@ -173,6 +173,18 @@ const DEMO_VEHICLES = [
     status: 'parado',
     updatedAt: '2026-11-01T22:00:00Z',
   },
+  {
+    id: 'v11',
+    plate: 'SEM-0000',
+    model: 'Mercedes Accelo',
+    driverName: 'Sem Posição',
+    latitude: null,
+    longitude: null,
+    speed: 0,
+    fuelLevel: 50,
+    status: 'parado',
+    updatedAt: '2026-11-01T22:00:00Z',
+  },
 ]
 
 let fundoAtivo = false
@@ -666,6 +678,86 @@ server.listen(PORT, async () => {
       console.log('  - Fechamento com tecla Escape: OK')
       console.log('  - Foco retornado ao marcador de origem: OK')
       console.log('  - Navegação Tab entre marcadores acessíveis: OK')
+    }
+
+    // 4. Teste de Veículo sem Posição (T-42 / Achado 1)
+    console.log(
+      '\n================================================================================',
+    )
+    console.log('VERIFICAÇÃO DE VEÍCULO SEM POSIÇÃO (COORDENADAS NULAS) - MAPA E TABELA')
+    console.log('================================================================================')
+
+    // Verifica que o veículo v11 não possui marcador no mapa
+    const resVeiculoSemPos = await sendCommand('Runtime.evaluate', {
+      expression: `JSON.stringify((() => {
+        const markerV11 = document.querySelector('[data-vehicle-id="v11"]');
+        const totalMarkers = document.querySelectorAll('.ft-map-marker').length;
+        return {
+          semMarcadorNoMapa: markerV11 === null,
+          totalMarkers,
+        };
+      })())`,
+      returnByValue: true,
+    })
+
+    let valVeiculoSemPos = null
+    try {
+      valVeiculoSemPos =
+        typeof resVeiculoSemPos.result?.result?.value === 'string'
+          ? JSON.parse(resVeiculoSemPos.result.result.value)
+          : resVeiculoSemPos.result?.value
+    } catch {}
+
+    const mapaSemPosOk = Boolean(
+      valVeiculoSemPos?.semMarcadorNoMapa && valVeiculoSemPos?.totalMarkers === 10,
+    )
+    if (!mapaSemPosOk) {
+      allPassed = false
+      console.log('  - Mapa com veículo sem posição: FALHA', valVeiculoSemPos)
+    } else {
+      console.log('  - Veículo sem posição não possui marcador no mapa (10 marcadores exibidos): OK')
+    }
+
+    // Navega para /vehicles para verificar a tabela de veículos
+    await sendCommand('Page.navigate', { url: `http://127.0.0.1:${PORT}/vehicles` })
+    await new Promise((r) => setTimeout(r, 600))
+
+    const resTabela = await sendCommand('Runtime.evaluate', {
+      expression: `JSON.stringify((() => {
+        const rows = Array.from(document.querySelectorAll('tbody tr'));
+        const rowV11 = rows.find(r => r.textContent.includes('SEM-0000'));
+        if (!rowV11) return { error: 'Linha do veículo SEM-0000 não encontrada' };
+        const cells = Array.from(rowV11.querySelectorAll('td')).map(td => td.textContent.trim());
+        // Coluna 3: Latitude, Coluna 4: Longitude
+        const latCell = cells[3];
+        const lngCell = cells[4];
+        const semDadoOk = latCell === 'sem dado' && lngCell === 'sem dado';
+        const markerV11 = document.querySelector('[data-vehicle-id="v11"]');
+        return {
+          encontrado: true,
+          latCell,
+          lngCell,
+          semDadoOk,
+          semMarcadorNoMapa: markerV11 === null,
+        };
+      })())`,
+      returnByValue: true,
+    })
+
+    let valTabela = null
+    try {
+      valTabela =
+        typeof resTabela.result?.result?.value === 'string'
+          ? JSON.parse(resTabela.result.result.value)
+          : resTabela.result?.value
+    } catch {}
+
+    if (!valTabela?.semDadoOk || !valTabela?.semMarcadorNoMapa) {
+      allPassed = false
+      console.log('  - Tabela /vehicles com veículo sem posição: FALHA', valTabela)
+    } else {
+      console.log('  - Tabela /vehicles exibe "sem dado" para latitude e longitude nulas: OK')
+      console.log('  - Mapa em /vehicles sem marcador para o veículo nulo: OK')
     }
 
     console.log(

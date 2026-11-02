@@ -3,6 +3,7 @@ import { render, screen, waitFor, fireEvent, act } from '@testing-library/react'
 import FleetMap from './FleetMap'
 import * as MapaUtils from './mapa/mapaUtils'
 import * as ConfigMapa from './mapa/configMapa'
+import { Marker } from 'maplibre-gl'
 import type { Vehicle, Delivery } from '../types'
 
 vi.mock('../styles/map-theme.scss', () => ({}))
@@ -92,8 +93,8 @@ const mockVehicles: Vehicle[] = [
     model: 'Ford Cargo',
     driverName: 'Sem Sinal',
     status: 'parado',
-    latitude: null as unknown as number,
-    longitude: null as unknown as number,
+    latitude: null,
+    longitude: null,
     speed: 0,
     fuelLevel: 50,
     updatedAt: '2026-11-01T12:00:00Z',
@@ -276,5 +277,36 @@ describe('FleetMap (T-81 / T-94 / ADR-0016 / H-22)', () => {
         duration: 0,
       },
     )
+  })
+
+  it('filtra veículos com latitude e longitude nulas sem criar marcador no mapa', async () => {
+    vi.spyOn(MapaUtils, 'isWebGlSupported').mockReturnValue(true)
+    vi.spyOn(ConfigMapa, 'carregarConfigMapa').mockResolvedValue({
+      desligado: false,
+      tilejsonUrl: 'https://tiles.openfreemap.org/planet',
+      glyphsUrl: '',
+      styleUrl: '',
+      credit: 'OpenFreeMap',
+    })
+
+    render(<FleetMap vehicles={mockVehicles} deliveries={mockDeliveries} />)
+
+    await waitFor(() => {
+      expect(lastCreatedMapInstance).not.toBeNull()
+      expect(vi.mocked(Marker)).toHaveBeenCalledTimes(2)
+    })
+
+    const instantiatedElements = vi
+      .mocked(Marker)
+      .mock.calls.map(([opts]) => (opts as { element: HTMLElement }).element)
+    expect(instantiatedElements.some((el) => el.getAttribute('data-vehicle-id') === 'v-1')).toBe(
+      true,
+    )
+    expect(instantiatedElements.some((el) => el.getAttribute('data-vehicle-id') === 'v-2')).toBe(
+      true,
+    )
+    expect(
+      instantiatedElements.some((el) => el.getAttribute('data-vehicle-id') === 'v-sem-posicao'),
+    ).toBe(false)
   })
 })

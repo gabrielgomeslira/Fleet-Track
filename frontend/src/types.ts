@@ -4,8 +4,8 @@ export interface Vehicle {
   model: string
   driverName: string
   status: string
-  latitude: number
-  longitude: number
+  latitude: number | null
+  longitude: number | null
   speed: number
   fuelLevel: number
   updatedAt: string

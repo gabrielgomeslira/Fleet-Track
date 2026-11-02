@@ -139,7 +139,10 @@ export class MarcadorVeiculo {
     this.marker = new Marker({
       element: btn,
       anchor: 'center',
-    }).setLngLat([this.veiculo.longitude, this.veiculo.latitude])
+    })
+    if (this.veiculo.longitude !== null && this.veiculo.latitude !== null) {
+      this.marker.setLngLat([this.veiculo.longitude, this.veiculo.latitude])
+    }
   }
 
   /**
@@ -166,7 +169,7 @@ export class MarcadorVeiculo {
       this.button.appendChild(criarIconeFormaMarcador(novoVeiculo.status))
     }
 
-    if (posMudou) {
+    if (posMudou && novoVeiculo.longitude !== null && novoVeiculo.latitude !== null) {
       this.marker.setLngLat([novoVeiculo.longitude, novoVeiculo.latitude])
     }
   }

@@ -42,8 +42,8 @@ export default function VehiclesPage({ vehicles }: Props) {
                 </td>
                 <td>{v.model}</td>
                 <td>{v.driverName}</td>
-                <td>{v.latitude.toFixed(4)}</td>
-                <td>{v.longitude.toFixed(4)}</td>
+                <td>{v.latitude != null ? v.latitude.toFixed(4) : 'sem dado'}</td>
+                <td>{v.longitude != null ? v.longitude.toFixed(4) : 'sem dado'}</td>
                 <td>{v.speed.toFixed(0)} km/h</td>
                 <td>
                   <div className="fuel-bar-wrapper">
