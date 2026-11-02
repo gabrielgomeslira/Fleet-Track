@@ -12,12 +12,15 @@ import { api } from '../api'
 import { formatarHora, formatarInstante, formatarPercentual } from '../formatos'
 import type { Vehicle, TelemetryRecord } from '../types'
 import StatusBadge from './StatusBadge'
+import { useThemeTokens } from '../theme/useThemeTokens'
+import ChartTooltip from './charts/ChartTooltip'
 
 interface Props {
   vehicles: Vehicle[]
 }
 
 export default function TelemetryPage({ vehicles }: Props) {
+  const tokens = useThemeTokens()
   const [selectedId, setSelectedId] = useState<string>('')
   const [records, setRecords] = useState<TelemetryRecord[]>([])
 
@@ -94,20 +97,30 @@ export default function TelemetryPage({ vehicles }: Props) {
             <h3>Velocidade (km/h)</h3>
             <ResponsiveContainer width="100%" height={280}>
               <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2e3244" />
-                <XAxis dataKey="time" tick={{ fill: '#9aa0b0', fontSize: 11 }} />
-                <YAxis tick={{ fill: '#9aa0b0', fontSize: 11 }} />
-                <Tooltip
-                  contentStyle={{
-                    background: '#222535',
-                    border: '1px solid #2e3244',
-                    borderRadius: 8,
+                <CartesianGrid strokeDasharray="3 3" stroke={tokens.borderSubtle01} />
+                <XAxis
+                  dataKey="time"
+                  stroke={tokens.borderSubtle01}
+                  tick={{
+                    fill: tokens.textSecondary,
+                    fontSize: 11,
+                    fontFamily: "'IBM Plex Mono', monospace",
                   }}
                 />
+                <YAxis
+                  stroke={tokens.borderSubtle01}
+                  tick={{
+                    fill: tokens.textSecondary,
+                    fontSize: 11,
+                    fontFamily: "'IBM Plex Mono', monospace",
+                  }}
+                />
+                <Tooltip content={<ChartTooltip unit="km/h" />} />
                 <Line
                   type="monotone"
                   dataKey="speed"
-                  stroke="#3b82f6"
+                  name="Velocidade"
+                  stroke={tokens.chartSpeed}
                   strokeWidth={2}
                   dot={false}
                 />
@@ -118,17 +131,34 @@ export default function TelemetryPage({ vehicles }: Props) {
             <h3>Combustível (%)</h3>
             <ResponsiveContainer width="100%" height={280}>
               <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2e3244" />
-                <XAxis dataKey="time" tick={{ fill: '#9aa0b0', fontSize: 11 }} />
-                <YAxis tick={{ fill: '#9aa0b0', fontSize: 11 }} domain={[0, 100]} />
-                <Tooltip
-                  contentStyle={{
-                    background: '#222535',
-                    border: '1px solid #2e3244',
-                    borderRadius: 8,
+                <CartesianGrid strokeDasharray="3 3" stroke={tokens.borderSubtle01} />
+                <XAxis
+                  dataKey="time"
+                  stroke={tokens.borderSubtle01}
+                  tick={{
+                    fill: tokens.textSecondary,
+                    fontSize: 11,
+                    fontFamily: "'IBM Plex Mono', monospace",
                   }}
                 />
-                <Line type="monotone" dataKey="fuel" stroke="#22c55e" strokeWidth={2} dot={false} />
+                <YAxis
+                  stroke={tokens.borderSubtle01}
+                  tick={{
+                    fill: tokens.textSecondary,
+                    fontSize: 11,
+                    fontFamily: "'IBM Plex Mono', monospace",
+                  }}
+                  domain={[0, 100]}
+                />
+                <Tooltip content={<ChartTooltip unit="%" />} />
+                <Line
+                  type="monotone"
+                  dataKey="fuel"
+                  name="Combustível"
+                  stroke={tokens.chartFuel}
+                  strokeWidth={2}
+                  dot={false}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -164,13 +194,19 @@ export default function TelemetryPage({ vehicles }: Props) {
       )}
 
       {selectedId && records.length === 0 && (
-        <div className="chart-card" style={{ textAlign: 'center', padding: 40, color: '#9aa0b0' }}>
+        <div
+          className="chart-card"
+          style={{ textAlign: 'center', padding: 40, color: 'var(--cds-text-secondary)' }}
+        >
           Nenhum registro de telemetria encontrado.
         </div>
       )}
 
       {!selectedId && (
-        <div className="chart-card" style={{ textAlign: 'center', padding: 40, color: '#9aa0b0' }}>
+        <div
+          className="chart-card"
+          style={{ textAlign: 'center', padding: 40, color: 'var(--cds-text-secondary)' }}
+        >
           Selecione um veículo para visualizar a telemetria.
         </div>
       )}

@@ -45,9 +45,26 @@ $ft-teal-g10: (
   --ft-tag-yellow-bg: #483c00;
   --ft-tag-yellow-text: #f1c21b;
   --ft-tag-yellow-border: #8a6d00;
+
+  /* Paleta Categórica Carbon Data-Viz para Recharts (g100) */
+  --ft-dataviz-1: #08bdba;
+  --ft-dataviz-2: #33b1ff;
+  --ft-dataviz-3: #be95ff;
+  --ft-dataviz-4: #42be65;
+  --ft-dataviz-5: #ff832b;
+
+  /* Mapeamento Semântico para Recharts (g100) */
+  --ft-chart-speed: #08bdba;
+  --ft-chart-fuel: #42be65;
+  --ft-chart-deliveries: #be95ff;
   --ft-chart-enroute: #33b1ff;
   --ft-chart-stopped: #f1c21b;
   --ft-chart-maintenance: #da1e28;
+  --ft-chart-grid: #393939;
+  --ft-chart-tooltip-bg: #262626;
+  --ft-chart-tooltip-border: #525252;
+  --ft-chart-axis-text: #c6c6c6;
+
   --ft-map-marker-enroute: #33b1ff;
   --ft-map-marker-stopped: #f1c21b;
   --ft-map-marker-maintenance: #da1e28;
@@ -64,9 +81,26 @@ $ft-teal-g10: (
   --ft-tag-yellow-bg: #fcf4d6;
   --ft-tag-yellow-text: #684e00;
   --ft-tag-yellow-border: #f1c21b;
+
+  /* Paleta Categórica Carbon Data-Viz para Recharts (g10) */
+  --ft-dataviz-1: #007d79;
+  --ft-dataviz-2: #0072c3;
+  --ft-dataviz-3: #8a3ffc;
+  --ft-dataviz-4: #198038;
+  --ft-dataviz-5: #ba4e00;
+
+  /* Mapeamento Semântico para Recharts (g10) */
+  --ft-chart-speed: #007d79;
+  --ft-chart-fuel: #198038;
+  --ft-chart-deliveries: #8a3ffc;
   --ft-chart-enroute: #0072c3;
   --ft-chart-stopped: #b28600;
   --ft-chart-maintenance: #da1e28;
+  --ft-chart-grid: #e0e0e0;
+  --ft-chart-tooltip-bg: #ffffff;
+  --ft-chart-tooltip-border: #c6c6c6;
+  --ft-chart-axis-text: #525252;
+
   --ft-map-marker-enroute: #0072c3;
   --ft-map-marker-stopped: #b28600;
   --ft-map-marker-maintenance: #da1e28;

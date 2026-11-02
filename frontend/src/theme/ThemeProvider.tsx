@@ -7,7 +7,8 @@ export interface ThemeContextValue {
   toggleTheme: () => void
 }
 
-const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
+// eslint-disable-next-line react-refresh/only-export-components
+export const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
 
 export interface ThemeProviderProps {
   children: React.ReactNode

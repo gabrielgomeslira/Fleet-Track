@@ -1,12 +1,16 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { formatarDia } from '../formatos'
 import type { DashboardStats } from '../types'
+import { useThemeTokens } from '../theme/useThemeTokens'
+import ChartTooltip from './charts/ChartTooltip'
 
 interface Props {
   stats: DashboardStats
 }
 
 export default function DeliveryChart({ stats }: Props) {
+  const tokens = useThemeTokens()
+
   const data = stats.deliveriesPerDay.map((d) => ({
     date: formatarDia(d.date, { day: '2-digit', month: '2-digit' }),
     entregas: d.count,
@@ -17,14 +21,32 @@ export default function DeliveryChart({ stats }: Props) {
       <h3>Entregas por Dia (14 dias)</h3>
       <ResponsiveContainer width="100%" height={260}>
         <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#2e3244" />
-          <XAxis dataKey="date" tick={{ fill: '#9aa0b0', fontSize: 12 }} />
-          <YAxis tick={{ fill: '#9aa0b0', fontSize: 12 }} allowDecimals={false} />
-          <Tooltip
-            contentStyle={{ background: '#222535', border: '1px solid #2e3244', borderRadius: 8 }}
-            labelStyle={{ color: '#e8eaed' }}
+          <CartesianGrid strokeDasharray="3 3" stroke={tokens.borderSubtle01} />
+          <XAxis
+            dataKey="date"
+            stroke={tokens.borderSubtle01}
+            tick={{
+              fill: tokens.textSecondary,
+              fontSize: 11,
+              fontFamily: "'IBM Plex Mono', monospace",
+            }}
           />
-          <Bar dataKey="entregas" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+          <YAxis
+            stroke={tokens.borderSubtle01}
+            tick={{
+              fill: tokens.textSecondary,
+              fontSize: 11,
+              fontFamily: "'IBM Plex Mono', monospace",
+            }}
+            allowDecimals={false}
+          />
+          <Tooltip content={<ChartTooltip unit="entregas" />} />
+          <Bar
+            dataKey="entregas"
+            name="Entregas concluídas por dia"
+            fill={tokens.dataviz4}
+            radius={[0, 0, 0, 0]}
+          />
         </BarChart>
       </ResponsiveContainer>
     </div>

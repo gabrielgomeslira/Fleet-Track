@@ -42,3 +42,70 @@
     fill: currentColor;
   }
 }
+
+// Estilos de Disponibilidade da Frota (T-80 / DS §5)
+.ft-availability-chart {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+
+  @media (max-width: 671.98px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.ft-availability-chart__graphic {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 220px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ft-availability-chart__legend {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0;
+  min-width: 190px;
+
+  @media (max-width: 671.98px) {
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--cds-border-subtle-01);
+  }
+}
+
+.ft-availability-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--cds-text-primary);
+}
+
+.ft-availability-legend__indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 0;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.ft-availability-legend__icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  color: var(--cds-text-secondary);
+}
+
+.ft-availability-legend__text {
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+

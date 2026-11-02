@@ -32,6 +32,9 @@ export function resolveTheme(): Theme {
 export function applyTheme(theme: Theme): void {
   if (typeof document !== 'undefined') {
     document.documentElement.setAttribute('data-theme', theme)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('ft-theme-change', { detail: { theme } }))
+    }
   }
 }
 
