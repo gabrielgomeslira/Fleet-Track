@@ -2,7 +2,7 @@
 
 | Documento | Conteúdo |
 |---|---|
-| [adr/](adr/README.md) | Decisões de arquitetura (ADR-0001 a ADR-0014), índice, qualidade esperada e matriz de autorização |
+| [adr/](adr/README.md) | Decisões de arquitetura (ADR-0001 a ADR-0020), índice, qualidade esperada e matriz de autorização |
 | [adr/0000-template.md](adr/0000-template.md) | Modelo para um ADR novo |
 | [images/](images) | Imagens usadas no README |
 

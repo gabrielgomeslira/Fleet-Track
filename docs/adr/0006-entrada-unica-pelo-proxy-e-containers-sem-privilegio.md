@@ -2,6 +2,13 @@
 Status: proposto
 Data: 2026-10-31
 Histórias: H-09 (SEC-02, SEC-03 e SEC-07)
+Revisto em 2026-11-02: CSP do mapa (ADR-0016) e fonte IBM Plex (ADR-0015).
+
+**Estado na `master` (`fa67a8f`): quase nada desta decisão está aplicado.** Conferido em `frontend/templates/default.conf.template`, `frontend/Dockerfile` e `docker-compose.yml`:
+- **Não há CSP nem nenhum outro cabeçalho de segurança.** O único `add_header` é o `Cache-Control` do `/config/mapa.json`.
+- `MAP_CSP_ORIGINS` chega ao container, mas **nenhum template a usa**. A T-92 registrou isso como risco.
+- `nginx:alpine` ouve na porta 80 e roda como root. O backend publica `${BACKEND_PORT}:5000`. Não há `read_only`, `cap_drop` nem rede interna.
+- Faltam T-31, T-32 e T-33. A T-33 está condicionada à P7, mas só os timeouts e o `limit_req` dependem dela. **A CSP pode entrar antes.** A T-33 ainda cita `frontend/nginx.conf`, removido em `29a14e8`: o alvo agora é o template.
 
 ## Contexto
 - Situação atual:
@@ -51,11 +58,17 @@ Opção C.
 
 **Cabeçalhos (no Nginx, `always`)**
 - `server_tokens off`
-- `Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.basemaps.cartocdn.com; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'`
-  - Requer **hospedar a fonte Inter no próprio front**: hoje ela vem do Google Fonts, o que também envia o IP do usuário a terceiro.
-  - `'unsafe-inline'` em estilo é exigência do Leaflet. Revisar no appsec.
+- `Content-Security-Policy`, gerada do template na subida do container (ADR-0016, item 8):
+  ```
+  default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' ${MAP_CSP_ORIGINS}; worker-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  ```
+  - **O provedor do mapa só entra em `connect-src`.** O padrão é `MAP_CSP_ORIGINS=https://tiles.openfreemap.org`. Vazia, nada sai para terceiros. `img-src` não tem origem externa: a CARTO do texto original e o OSM saíram.
+  - A fonte é a **IBM Plex, servida pelo próprio front** (ADR-0015). A Inter e o Google Fonts saíram.
+  - `'unsafe-inline'` em estilo era exigência do Leaflet, que saiu. A bancada do ADR-0016 passou com ele ligado, e **ninguém testou sem ele**. Testar sem, na T-33, e o appsec revisa.
+  - **Só a política foi testada, e numa bancada, não no produto.** O aceite é da T-33: console sem violação, com o mapa real e pelo Nginx real.
+  - **Armadilha do `add_header`:** quem declara `add_header` num `location` perde os herdados. Hoje isso afeta `/config/mapa.json`. `/api/` receberá o `no-store`. Repetir os cabeçalhos com `include` em cada um. O `.mjs` do worker cai no `location /` e herda, desde que esse bloco não ganhe `add_header`.
 - `X-Content-Type-Options: nosniff`
-- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Referrer-Policy: strict-origin-when-cross-origin`. Não muda com o mapa: o `Origin` do CORS sai de qualquer forma (ADR-0016).
 - `Permissions-Policy: geolocation=(), camera=(), microphone=()`
 - `Cross-Origin-Opener-Policy: same-origin`
 - `X-Frame-Options: DENY` (legado, redundante com `frame-ancestors`)

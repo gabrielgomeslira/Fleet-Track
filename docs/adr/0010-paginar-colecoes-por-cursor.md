@@ -2,6 +2,10 @@
 Status: proposto
 Data: 2026-10-31
 Histórias: H-11 e H-17 (valida o alvo de < 500 ms)
+Complementos de 2026-11-02:
+- A telemetria ganha `meta.retentionHours` na resposta, e o trajeto de 2 h segue o cursor com teto de 5 páginas no front (ADR-0019).
+- **Exceção:** `GET /api/v1/alerts` não tem cursor, porque a lista é calculada e limitada a 2 alertas por veículo (ADR-0018).
+- O "ponto a cada 5 s" do texto abaixo foi revisto: a demo grava a cada 30 s (ADR-0007), e a retenção é de 24 h (H-12).
 
 ## Contexto
 - Hoje `vehicles` e `deliveries` devolvem a tabela inteira, e a telemetria devolve as últimas 50 linhas fixas (SEC-05).

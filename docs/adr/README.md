@@ -1,5 +1,7 @@
 # Fleet-Track open source: decisões de arquitetura e design
-Data: 2026-10-31 · Autor: arquiteto · Entradas: PRD, histórias (H-xx), análise de segurança (SEC-xx), UX e o código em `Fleet-Track/` (commit `4109c68` + working tree).
+Data: 2026-10-31; revisão em 2026-11-02 · Autor: arquiteto · Entradas: PRD, histórias (H-xx), análise de segurança (SEC-xx), UX e o código em `Fleet-Track/` (`master` em `fa67a8f`).
+
+**Este documento descreve o alvo, não o estado atual.** Na `master`, a API ainda é sem versão e sem autenticação, e os cabeçalhos e o isolamento do ADR-0006 não estão aplicados. Marcado como "na `master`" só o que foi conferido no código.
 
 ## Índice de ADRs
 | ADR | Decisão | Histórias | Fase |
@@ -9,8 +11,8 @@ Data: 2026-10-31 · Autor: arquiteto · Entradas: PRD, histórias (H-xx), análi
 | [0003](0003-autenticar-no-proprio-backend-com-dois-esquemas.md) | Identity (pessoas) + chave de API (sistemas), autorização fechada por padrão | H-05 | 2 |
 | [0004](0004-sessao-do-dashboard-por-cookie-httponly.md) | Sessão em cookie HttpOnly SameSite=Strict, sem token no JS | H-06 | 2 |
 | [0005](0005-credenciais-de-sistema-como-chaves-de-api-opacas.md) | Chave opaca `ftk_…`, hash SHA-256, escopos, revogação imediata | H-07 | 2 |
-| [0006](0006-entrada-unica-pelo-proxy-e-containers-sem-privilegio.md) | Só o Nginx exposto (loopback por padrão), rede interna, sem root, cabeçalhos | H-09 | 2 |
-| [0007](0007-simulacao-por-job-no-backend-em-modo-demo.md) | Job único em modo demo; `POST /simulate` removido (**depende do humano**) | H-10, H-14 | 2 |
+| [0006](0006-entrada-unica-pelo-proxy-e-containers-sem-privilegio.md) | Só o Nginx exposto (loopback por padrão), rede interna, sem root, cabeçalhos. CSP revista para o OpenFreeMap. **Ainda não aplicado** | H-09 | 2 |
+| [0007](0007-simulacao-por-job-no-backend-em-modo-demo.md) | Job único em modo demo, **a cada 30 s**; `POST /simulate` removido. **Aceito (P1)**, ainda não implementado | H-10, H-14, H-25 | 2 |
 | [0008](0008-apagar-dado-pessoal-do-motorista-e-manter-historico-operacional.md) | Entidade `drivers`; remoção apaga o dado pessoal e mantém as entregas | H-13 | 2 |
 | [0009](0009-versionar-api-na-rota-com-openapi-gerado-do-codigo.md) | `/api/v1` na rota; OpenAPI gerado do código, com *drift* e `oasdiff` na CI | H-15 | 3 |
 | [0010](0010-paginar-colecoes-por-cursor.md) | Paginação por cursor + índices; **valida < 500 ms de H-17** | H-11, H-17 | 2–3 |
@@ -18,13 +20,21 @@ Data: 2026-10-31 · Autor: arquiteto · Entradas: PRD, histórias (H-xx), análi
 | [0012](0012-manter-historico-git-sem-reescrita.md) | Não reescrever o histórico (o repositório **já é público**) | H-20 | 3 |
 | [0013](0013-releases-por-tag-semver-com-imagens-no-ghcr.md) | Tag semver → imagens multiarquitetura no GHCR; compose com imagens fixadas | H-20 | 3 |
 | [0014](0014-escrever-cadastro-com-escopo-proprio-e-recurso-unico-de-motoristas.md) | Escopo `cadastro:escrever`; motoristas em `/api/v1/drivers` (recurso único; altera 0003, 0005, 0008) | H-23 | 3 |
+| [0015](0015-adotar-carbon-com-react-sass-seletivo-temas-g10-g100-e-plex-local.md) | Carbon: `@carbon/react` + Sass seletivo, temas g10/g100 por `data-theme`, ícones Carbon, Plex local, **Recharts** com paleta Carbon (altera 0006 e a seção 4.9 do plano). Mapa e cor de status revistos em 2026-11-02. **Aceito em 2026-11-01** | DS / H-21, H-22 | 4.9 |
+| [0016](0016-desenhar-mapa-com-openfreemap-e-maplibre-e-ler-rotas-da-entrega.md) | Mapa com OpenFreeMap (provedor externo, configurável e desligável) + MapLibre em chunk, estilo próprio sem vegetação nem relevo; rotas em campo novo da entrega, preenchido pela demo (altera 0015 §4 e 0006). **Aceito em 2026-11-01.** Com "Verificado no produto" e **1 defeito aberto (`MAP_STYLE_URL`)** | H-22, H-24, H-38 | 4.9 / M1 |
+| [0017](0017-guardar-ultimo-sinal-e-aceitar-posicao-nula-no-veiculo.md) | `vehicles.last_signal_at`; posição, velocidade e combustível anuláveis, sem valor inventado. **Aceito em 2026-11-02** | H-12, H-32, H-37 | 2 |
+| [0018](0018-derivar-alertas-na-leitura-sem-estado-gravado.md) | Alertas derivados na leitura, em `GET /alerts`, só para pessoas; "parado" calculado da telemetria. **Aceito em 2026-11-02** | H-31 a H-34 | M2 |
+| [0019](0019-compor-pagina-do-veiculo-e-ler-trajeto-por-cursor-com-teto.md) | `/vehicles/:id` com GUID; página composta, com `currentDelivery` no detalhe; trajeto por cursor com teto de 5 páginas. **Aceito em 2026-11-02** | H-36 a H-41 | M3 |
+| [0020](0020-guardar-prazo-na-entrega-e-calcular-situacao-e-taxa-no-servidor.md) | `deliveries.due_at`; situação e taxa no servidor, com `GET /deliveries/punctuality`. **Aceito em 2026-11-02** | H-42 a H-45 | M4 |
 
 Os ADRs 0001 e 0002 não estavam no pedido do orquestrador. São pré-requisitos sem os quais 0003–0011 não se sustentam.
 
 ## Atributos de qualidade (premissas marcadas com *)
 - Escala*: uma instalação por organização, 1 instância de backend, ≤ 20 pessoas, ≤ 10 sistemas, ≤ 500 veículos, ingestão ≤ 50 req/s.
 - Telemetria `GET` de um veículo: **p95 < 100 ms no servidor** com 1 milhão de linhas no veículo e 10 milhões na tabela. O alvo do PRD (< 500 ms) é viável com folga (ADR-0010).
-- Listagens: p95 < 200 ms*. `dashboard/stats`: p95 < 300 ms* (consolidar 11 queries em 2 agregações, SEC-05).
+- Listagens: p95 < 200 ms*. `dashboard/stats`: p95 < 300 ms* (consolidar 11 queries em 2 agregações, SEC-05). `alerts`: p95 < 300 ms*. Página do veículo: bloco principal em até 2 s (H-41). Nenhum desses foi medido: os endpoints não existem.
+- Frontend: JS inicial ≤ 300 KB gzip (hoje 224,8 KiB) e chunk + worker do mapa ≤ 460 KB* (hoje 448,9 KiB, no limite). Medido em `frontend/dist` em 2026-11-02, ver ADR-0016.
+- Retenção da telemetria: 24 h por padrão, com piso de 2 h (decisão do humano, H-12).
 - Revogação de chave de API: imediata. Revogação de sessão de pessoa: ≤ 5 min.
 - Primeira execução: ≤ 15 min (métrica do PRD). Imagens prontas (ADR-0013) e um único segredo obrigatório (ADR-0011).
 - Disponibilidade: fora de escopo definir. É self-hosted e quem instala opera. Backup é responsabilidade de quem instala (documentar em H-19).
@@ -34,7 +44,7 @@ Os ADRs 0001 e 0002 não estavam no pedido do orquestrador. São pré-requisitos
 [Gestor / Operador] --HTTPS(ou http://localhost)--> [Fleet-Track]
 [Administrador]     --mesmo canal-->                [Fleet-Track]
 [Sistema externo: ERP, rastreador, script] --HTTP + Bearer ftk_…--> [Fleet-Track]
-[Navegador] --tiles--> [CARTO basemaps] (terceiro, só imagens do mapa)
+[Navegador] --TileJSON, tiles e glifos--> [OpenFreeMap tiles.openfreemap.org, via Cloudflare] (terceiro; configurável e desligável, ADR-0016; recebe IP, endereço da instalação e área vista, nunca dados da API)
 Quem instala = controlador LGPD; opera Docker, TLS e backup.
 ```
 
@@ -44,8 +54,9 @@ host: ${FLEET_BIND_ADDRESS:-127.0.0.1}:${FRONTEND_PORT:-3000}
         │
 ┌───────▼──────────── rede edge ────────────────────────────┐
 │ frontend (nginx-unprivileged :8080, read-only, sem root)   │
-│  - SPA React estática (fontes locais)                      │
+│  - SPA React estática (fontes locais), mapa em chunk       │
 │  - cabeçalhos de segurança, limit_req no login, timeouts   │
+│  - CSP e /config/mapa.json gerados das variáveis MAP_*     │
 │  - /api/* → backend:8080                                   │
 └───────┬──────────── rede interna (internal: true) ─────────┘
         │
@@ -54,30 +65,36 @@ host: ${FLEET_BIND_ADDRESS:-127.0.0.1}:${FRONTEND_PORT:-3000}
 │  - Identity + cookie │ ApiKey    │ SQL  │  sem portas publicadas    │
 │  - API /api/v1 + OpenAPI         │      └──────────────────────────┘
 │  - migrações na subida (0002)    │
-│  - SimulacaoJob (só demo, 0007)  │
-│  - (H-12) ExpurgoJob — prazo TBD │
+│  - SimulacaoJob (só demo, 30 s)  │
+│  - ExpurgoJob (1 h, retenção 24 h)│
 └──────────────────────────────────┘
 ```
-Componentes que importam no backend: `Auth` (esquemas, políticas, setup), `Ingestao` (H-16), `Consulta` (listas por cursor), `Admin` (usuários, chaves, motoristas, auditoria), `Jobs` (simulação; expurgo depende de H-12). Monólito modular: **nenhum serviço novo**.
+Componentes que importam no backend: `Auth` (esquemas, políticas, setup), `Ingestao` (H-16), `Consulta` (listas por cursor), `Alertas` e `SituacaoEntrega` (funções puras com relógio do servidor, ADR-0018 e ADR-0020), `Admin` (usuários, chaves, motoristas, auditoria), `Jobs` (simulação e expurgo). Monólito modular: **nenhum serviço novo**.
 
 ## Modelo de dados (alvo da fase 2–3)
-Todos os instantes em `timestamptz` (hoje são `timestamp`). A migração ocorre na baseline (ADR-0002).
+Todos os instantes em `timestamptz`: na `master` desde a T-14.
 
 | Tabela | Colunas principais | Índices | Dado pessoal |
 |---|---|---|---|
-| `vehicles` | id uuid PK, plate (exibição), **plate_normalizada** (única, ADR-0014), model, status (enum do contrato), latitude, longitude, speed, fuel_level, updated_at, **driver_id → drivers ON DELETE SET NULL** | `UNIQUE(plate_normalizada)`, `(plate, id)` | indireto (posição atual) |
+| `vehicles` | id uuid PK, plate (exibição), **plate_normalizada** (única, ADR-0014), model, status (enum do contrato), **latitude?, longitude?, speed?, fuel_level?, last_signal_at?** (anuláveis, sem valor padrão, ADR-0017), updated_at, **driver_id → drivers ON DELETE SET NULL** | `UNIQUE(plate_normalizada)`, `(plate, id)`; `CHECK` de posição completa e de posição com sinal | indireto (posição atual, respeita a retenção; `last_signal_at` fica) |
 | `drivers` (novo, 0008) | id uuid PK, nome, criado_em | PK | **sim** (nome) |
-| `deliveries` | id, vehicle_id FK, origin, destination, status, created_at, delivered_at | `(created_at DESC, id DESC)`, `(status, created_at DESC)`, `(vehicle_id)` | não |
-| `telemetry_records` | id uuid (v7 gerado na app), vehicle_id FK, latitude, longitude, speed, fuel_level, recorded_at, received_at | **`UNIQUE(vehicle_id, recorded_at DESC)`**; BRIN(`recorded_at`) se o expurgo de H-12 precisar | **sim** (trilha de posição do veículo) |
+| `deliveries` | id, vehicle_id FK, origin, destination, status, created_at, delivered_at, **route_path? jsonb** (ADR-0016, na `master`), **due_at? timestamptz** (ADR-0020) | `(created_at DESC, id DESC)`, `(status, created_at DESC)`, `(vehicle_id)` | indireto em `route_path` (fictício na demo; nulo fora dela) |
+| `telemetry_records` | id uuid (v7 gerado na app), vehicle_id FK, latitude, longitude, **speed?, fuel_level?** (ADR-0017), recorded_at, received_at | **`UNIQUE(vehicle_id, recorded_at DESC)`**; BRIN(`recorded_at`) se o expurgo de H-12 precisar | **sim** (trilha de posição do veículo) |
 | `users`, `roles`, `user_roles`, … (Identity) | id, user_name, password_hash, security_stamp, lockout_end, access_failed_count, **must_change_password** | padrão do Identity | **sim** (usuário, nome) |
 | `api_keys` (0005) | id (público, 12 caracteres), nome, escopos text[], segredo_hash, criada_por, criada_em, ultimo_uso_em, expira_em, revogada_em | PK | não |
 | `audit_events` | id, ocorrido_em, ator_tipo, ator_id, acao, alvo_tipo, alvo_id, detalhes jsonb (**sem dado pessoal**) | `(ocorrido_em DESC)` | não (só ids) |
 | `data_protection_keys` (0004) | id, friendly_name, xml | PK | não (segredo de sessão) |
 
-Retenção da telemetria e da auditoria: **não definida aqui** (H-12 pendente). O modelo suporta o expurgo por `recorded_at`.
+Retenção da telemetria: **24 h por padrão, com piso de 2 h** (H-12), por `FLEET_TELEMETRY_RETENTION_HOURS`. O expurgo também limpa a última posição em `vehicles` e mantém `last_signal_at` (ADR-0017). Na demo, preserva o último registro. Retenção da auditoria: não definida.
 
 ## Contratos (convenções da `v1`; o arquivo é gerado do código, ADR-0009)
-- Base `/api/v1`. Saúde em `/api/health` (`status`, `version`, `setupPending`).
+- Base `/api/v1`. Saúde em `/api/health` (`status`, `version`, `demo`, `setupPending`).
+- Leituras novas ou alteradas em 2026-11-02:
+  - `vehicles` e `vehicles/{id}`: `latitude`, `longitude`, `speed`, `fuelLevel` e `lastSignalAt` podem vir `null`, e o campo nunca é omitido (ADR-0017).
+  - `vehicles/{id}`: `currentDelivery | null` e `activeDeliveryCount`, sem o array `deliveries` (ADR-0019).
+  - `vehicles/{id}/telemetry`: `meta.retentionHours`; `speed` e `fuelLevel` podem vir `null` (ADR-0017, ADR-0019).
+  - `GET /api/v1/alerts?vehicleId=`: lista calculada, sem cursor (ADR-0018).
+  - `deliveries`: `dueAt` e `situation`. `GET /api/v1/deliveries/punctuality` traz a taxa e as atrasadas (ADR-0020).
 - Erros em RFC 9457 `application/problem+json`, com `type` estável (`…/errors/validation`, `…/not-found`, `…/unauthorized`, `…/forbidden`, `…/rate-limited`). 400 traz `errors{campo:[mensagens]}` dizendo o formato aceito (H-03, H-11).
 - Coleções: `?limit=1..200 (padrão 50)&cursor=` → `{data, page{limit, nextCursor}}` (ADR-0010).
 - Status com vocabulário único (enum no contrato, H-21). Veículo: `em_rota`, `parado`, `manutencao`. Entrega: `pendente`, `em_transito`, `entregue`, `cancelado`. Como as chaves JSON são camelCase em inglês e os valores em português, revisar antes de congelar a `v1`.
@@ -113,7 +130,7 @@ Escopos de sistema combináveis numa mesma chave (ADR-0005, ADR-0014). A coluna 
 | `POST /api/v1/setup` (só com código, 409 depois) | ✔* | 409 | 409 | 409 | 409 | 409 |
 | `POST /api/v1/auth/login`, `logout`, `me`, `password` | login ✔ | ✔ | ✔ | 403 | 403 | 403 |
 | `GET vehicles`, `vehicles/{id}`, `vehicles/{id}/telemetry`, `deliveries`, `deliveries/{id}` | 401 | ✔ | ✔ | ✔ | 403 | 403 |
-| `GET dashboard/stats` | 401 | ✔ | ✔ | 403 | 403 | 403 |
+| `GET dashboard/stats`, `alerts`, `deliveries/punctuality` | 401 | ✔ | ✔ | 403 | 403 | 403 |
 | `POST positions` | 401 | 403 | 403 | 403 | ✔ | 403 |
 | `POST vehicles`, `PUT vehicles/{id}`, `POST drivers`, `PUT drivers/{id}` (H-23) | 401 | 403 | ✔ | 403 | 403 | ✔ |
 | `GET drivers`, `GET drivers/{id}` | 401 | 403 | ✔ | 403 | 403 | 403 |
@@ -139,11 +156,20 @@ Regra testável: **nenhuma chave de sistema acessa `/api/v1/admin/*`**, seja qua
 | Ações admin | **R**epudiation | `audit_events` com ator, ação e alvo, sem dado pessoal |
 | Containers | **E**levação após RCE | Sem root, `cap_drop ALL`, `no-new-privileges`, read-only, rede interna sem saída |
 | Banco / volume | **I**nformation disclosure (backup do host) | Fora do controle do app: documentar em H-19 (controlador); sem porta publicada |
+| Navegador → provedor do mapa | **I**: IP, endereço da instalação e área vista saem para terceiro. A página do veículo enquadra o trajeto sozinha | Aceito pelo humano para o Dashboard e, em 2026-11-02, para a página do veículo (ADR-0019). Tile sem placa nem id; aviso a quem instala; desligamento por variável. CSP planejada, **ainda não aplicada** |
+| Provedor → navegador | **T**: HTML no `attribution` do TileJSON; `tiles` apontando para outro host | Crédito próprio, sem o HTML do provedor (na `master`). Bloqueio de outro host depende da CSP, **ainda não aplicada** (T-33) |
+| API → alertas, taxa e página do veículo | **I**, **E**: dados da frota por credencial errada | Só sessão de pessoa em `alerts` e `punctuality`; demais leituras com a matriz de sempre (ADR-0018, 0019, 0020) |
+| `voltar` no login | **S**: redirecionamento aberto | Só caminho interno (ADR-0019) |
+
+Os fluxos do mapa têm o threat model completo no ADR-0016. **Enquanto a T-21 não entrar, nada deste quadro que dependa de autenticação está ativo:** a API da `master` não tem login.
 
 ## Falhas de dependências
 - **Postgres indisponível:** health → 503; API → 503 Problem Details. Retry do Npgsql (`EnableRetryOnFailure`, 3 tentativas, backoff exponencial até 5 s) só para leitura e para escrita idempotente. A ingestão é idempotente, então o integrador pode reenviar. Na subida, `depends_on: service_healthy` + migração com retry. O front mostra "serviço indisponível, tentar de novo" (H-21).
-- **Tiles do CARTO fora do ar:** o mapa fica sem fundo e os marcadores continuam. Não bloqueia nada. Documentar como trocar o provedor de tiles.
-- **Backend → nada externo:** a rede interna não tem saída. Nenhuma outra dependência de terceiros em tempo de execução. A fonte Inter passa a ser servida localmente (CSP + privacidade).
+- **Provedor do mapa fora, bloqueando ou travado:** fundo liso com aviso e "Tentar de novo"; marcadores, popups e tabela continuam. Vigia de 15 s* para resposta que nunca chega, e novas tentativas em 30, 60, 120 e 300 s* (ADR-0016, T-94 na `master`). Para trocar ou desligar o provedor, variáveis `MAP_*`. **`MAP_STYLE_URL` está com defeito: é ignorada** (ADR-0016).
+- **Alertas com erro:** a central mostra erro com nova tentativa, nunca "tudo em ordem" (ADR-0018).
+- **Bloco da página do veículo com erro:** só aquele bloco cai; a identificação depende de `GET /vehicles/{id}` (ADR-0019).
+- **Taxa de pontualidade com erro:** só o bloco da taxa cai; a lista continua (ADR-0020).
+- **Backend → nada externo:** a rede interna não tem saída. Nenhuma outra dependência de terceiros em tempo de execução. A fonte passa a ser servida localmente (CSP + privacidade): IBM Plex, desde o ADR-0015 (antes, Inter). A telemetria de instalação dos pacotes IBM fica desligada na CI e no build (`IBM_TELEMETRY_DISABLED=true`).
 
 ## Divergências entre a UX e os ADRs (alinhar antes do tech-lead)
 1. **`/setup` sem proteção** (UX §3.3): precisa do campo "Código de configuração". Sem ele, a tela permite tomada de controle (ADR-0011).
@@ -160,9 +186,9 @@ Regra testável: **nenhuma chave de sistema acessa `/api/v1/admin/*`**, seja qua
 7. **Remoção de motorista**: o modal de confirmação já existe na UX. Falta a opção "também apagar a telemetria dos veículos vinculados" com o aviso de semântica (ADR-0008) e a tela de lista de motoristas (admin). A tela usa `GET /api/v1/drivers` e `DELETE /api/v1/drivers/{id}` (ADR-0014). Não há formulário de cadastro (H-23 é só API).
 
 ## Premissas e decisões que o humano deve confirmar
-1. Leitura provisória de H-10 (ADR-0007): o front não chama a simulação, o job roda só em demo e com intervalo fixo, e o endpoint é removido.
-2. Migrar para .NET 10 na fase 1 (ADR-0001).
-3. Instalações anteriores à v1.0 são recriadas (`down -v`), sem migração da base antiga (ADR-0002).
+1. ~~Leitura de H-10 (ADR-0007)~~ confirmada (P1, 2026-11-01).
+2. ~~Migrar para .NET 10 na fase 1 (ADR-0001)~~ confirmado (P2, 2026-11-01).
+3. ~~Instalações anteriores à v1.0 são recriadas (ADR-0002)~~ confirmado (P3, 2026-11-01).
 4. `POST /api/v1/setup` como exceção anônima à regra de H-05 (ADR-0011).
 5. Repositório **já público**: manter público até a fase 2 ou torná-lo privado? E-mail pessoal em 2 commits: aceitar ou reescrever só a autoria antes de divulgar (ADR-0012)?
 6. ~~Lacuna de escopo~~ resolvida pelo PM (H-23) e pelo ADR-0014. Confirmar:
@@ -170,6 +196,15 @@ Regra testável: **nenhuma chave de sistema acessa `/api/v1/admin/*`**, seja qua
    - formato de placa genérico `^[A-Z0-9]{5,10}$`, sem impor o padrão Mercosul;
    - aceitar duplicata de motorista em `POST` repetido na v1.
 7. Números marcados com * (limites, escala, timeouts, tolerância de 2 min, tamanho mínimo de senha, formato de placa).
-8. Fora daqui, por restrição do pedido: prazo de retenção (H-12) e formato de rastreador de terceiros (H-16).
+8. ~~ADR-0015 (Carbon)~~ aceito em 2026-11-01 (P12). Os orçamentos marcados com * continuam premissa até a medição da T-75:
+   - gráficos em Recharts com a paleta do Carbon, e não `@carbon/charts-react`;
+   - logo sem Inter 800 (a Plex vai até 700);
+   - orçamento JS ≤ 300 KB e CSS ≤ 60 KB gzip*;
+   - telemetria de instalação da IBM desligada.
+9. ~~Prazo de retenção (H-12)~~ decidido: 24 h, piso de 2 h. Fora daqui, por restrição do pedido: formato de rastreador de terceiros (H-16).
+10. ~~ADR-0017 a 0020, propostos~~ aceitos pelo humano em 2026-11-02, incluindo:
+    - a página do veículo faz o mapa pedir ao provedor a região do trajeto automaticamente, e o aviso da T-61 será reescrito (ADR-0019);
+    - `dueAt` e `situation` ficam visíveis para `frota:ler`, com a H-46 adiada (ADR-0020).
+11. Para o PM, sem decisão humana: limite superior da janela da H-44 (ADR-0020) e o texto da H-10 sobre retenção, que contradiz a H-12 (ADR-0017).
 
-Próximo: tech-lead | entradas: este README + ADR-0001…0014 (ordem sugerida: 0001, 0002 na fase 1; 0003–0008, 0010 na fase 2; 0009, 0011–0014 na fase 3; 0014 antes de H-16 fora do demo)
+Próximo: tech-lead | entradas: este índice + ADR-0001…0020 (ordem sugerida: 0001, 0002 na fase 1; 0003–0008, 0010, 0017 na fase 2; 0009, 0011–0014 na fase 3; 0014 antes de H-16 fora do demo; 0018, 0019 e 0020 em M2, M3 e M4)
