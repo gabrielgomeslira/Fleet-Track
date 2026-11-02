@@ -25,7 +25,7 @@ vi.mock('./api', () => ({
     getVehicles: vi.fn(),
     getDeliveries: vi.fn(),
     getStats: vi.fn(),
-    simulate: vi.fn(),
+    getTelemetry: vi.fn(),
   },
 }))
 
@@ -78,7 +78,6 @@ describe('Rotas da Aplicação (T-18)', () => {
     vi.mocked(api.getVehicles).mockResolvedValue(mockVehicles)
     vi.mocked(api.getDeliveries).mockResolvedValue(mockDeliveries)
     vi.mocked(api.getStats).mockResolvedValue(mockStats)
-    vi.mocked(api.simulate).mockResolvedValue({} as never)
   })
 
   afterEach(() => {
@@ -192,6 +191,59 @@ describe('Rotas da Aplicação (T-18)', () => {
         expect(screen.getByRole('heading', { level: 1, name: /veículos/i })).toBeDefined()
       })
       expect(window.location.pathname).toBe('/vehicles')
+    })
+  })
+
+  describe('Atualização periódica e ausência de simulação no front (T-37 / H-10)', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('recarrega dados com GET a cada 5s sem disparar simulação e limpa o intervalo ao desmontar (R12)', async () => {
+      const { unmount } = render(<App />)
+
+      // Carga inicial
+      await act(async () => {
+        await Promise.resolve()
+      })
+
+      expect(api.getVehicles).toHaveBeenCalledTimes(1)
+      expect(api.getDeliveries).toHaveBeenCalledTimes(1)
+      expect(api.getStats).toHaveBeenCalledTimes(1)
+      expect((api as unknown as { simulate?: unknown }).simulate).toBeUndefined()
+
+      // Avança 5 segundos
+      await act(async () => {
+        vi.advanceTimersByTime(5000)
+      })
+
+      expect(api.getVehicles).toHaveBeenCalledTimes(2)
+      expect(api.getDeliveries).toHaveBeenCalledTimes(2)
+      expect(api.getStats).toHaveBeenCalledTimes(2)
+
+      // Avança mais 5 segundos
+      await act(async () => {
+        vi.advanceTimersByTime(5000)
+      })
+
+      expect(api.getVehicles).toHaveBeenCalledTimes(3)
+      expect(api.getDeliveries).toHaveBeenCalledTimes(3)
+      expect(api.getStats).toHaveBeenCalledTimes(3)
+
+      // Desmonta componente
+      unmount()
+
+      // Avança mais 10 segundos após desmontagem
+      await act(async () => {
+        vi.advanceTimersByTime(10000)
+      })
+
+      // Não deve ter chamado novas leituras após o unmount
+      expect(api.getVehicles).toHaveBeenCalledTimes(3)
     })
   })
 })

@@ -101,13 +101,8 @@ export default function App() {
   }, [fetchData])
 
   useEffect(() => {
-    const interval = setInterval(async () => {
-      try {
-        await api.simulate()
-        await fetchData()
-      } catch {
-        // Ignora erros na simulação periódica
-      }
+    const interval = setInterval(() => {
+      fetchData()
     }, 5000)
     return () => clearInterval(interval)
   }, [fetchData])
