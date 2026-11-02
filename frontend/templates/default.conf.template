@@ -6,6 +6,13 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    # Compressao: o orcamento do ADR-0015 e medido em gzip. WOFF2 e PNG ja sao comprimidos.
+    gzip on;
+    gzip_comp_level 5;
+    gzip_min_length 1024;
+    gzip_vary on;
+    gzip_types text/css application/javascript text/javascript application/json image/svg+xml;
+
     # Configuracao do mapa (ADR-0016). Sem esta regra o try_files abaixo devolveria
     # index.html e o front desligaria o fundo em silencio.
     # O arquivo e gerado em NGINX_ENVSUBST_OUTPUT_DIR (/etc/nginx/conf.d); com
