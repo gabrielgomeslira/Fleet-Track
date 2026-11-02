@@ -15,7 +15,7 @@ class MockResizeObserver {
 
 vi.stubGlobal('ResizeObserver', MockResizeObserver)
 
-// Mock de FleetMap para isolar do mapa Leaflet no jsdom
+// Mock de FleetMap para isolar do mapa MapLibre (WebGL) no jsdom
 vi.mock('./components/FleetMap', () => ({
   default: () => <div data-testid="fleet-map">FleetMap Mock</div>,
 }))

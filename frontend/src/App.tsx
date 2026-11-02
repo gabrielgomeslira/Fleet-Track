@@ -1,8 +1,8 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
 import StatsCards from './components/StatsCards'
-import FleetMap from './components/FleetMap'
+import { SkeletonText } from '@carbon/react'
 import DeliveryChart from './components/DeliveryChart'
 import StatusChart from './components/StatusChart'
 import VehicleTable from './components/VehicleTable'
@@ -12,6 +12,8 @@ import DeliveriesPage from './components/DeliveriesPage'
 import TelemetryPage from './components/TelemetryPage'
 import { api } from './api'
 import type { Vehicle, Delivery, DashboardStats } from './types'
+
+const FleetMap = lazy(() => import('./components/FleetMap'))
 
 export function AppContent({
   vehicles,
@@ -34,7 +36,26 @@ export function AppContent({
                 <h1>Dashboard de Frota</h1>
                 <p className="subtitle">Monitoramento em tempo real da frota logística</p>
                 <StatsCards stats={stats} />
-                <FleetMap vehicles={vehicles} />
+                <Suspense
+                  fallback={
+                    <div className="fleet-map fleet-map-loading" data-testid="fleet-map-loading">
+                      <h3>Mapa da Frota</h3>
+                      <div
+                        className="map-container"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: '24px',
+                        }}
+                      >
+                        <SkeletonText paragraph lineCount={3} />
+                      </div>
+                    </div>
+                  }
+                >
+                  <FleetMap vehicles={vehicles} deliveries={deliveries} />
+                </Suspense>
                 <div className="charts-row">
                   <DeliveryChart stats={stats} />
                   <StatusChart stats={stats} />

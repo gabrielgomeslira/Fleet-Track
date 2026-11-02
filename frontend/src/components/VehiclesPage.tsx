@@ -1,7 +1,10 @@
+import { lazy, Suspense } from 'react'
+import { SkeletonText } from '@carbon/react'
 import { formatarHora, formatarPercentual } from '../formatos'
 import StatusBadge from './StatusBadge'
 import type { Vehicle } from '../types'
-import FleetMap from './FleetMap'
+
+const FleetMap = lazy(() => import('./FleetMap'))
 
 interface Props {
   vehicles: Vehicle[]
@@ -12,7 +15,9 @@ export default function VehiclesPage({ vehicles }: Props) {
     <>
       <h1>Veículos</h1>
       <p className="subtitle">Gerenciamento completo da frota</p>
-      <FleetMap vehicles={vehicles} />
+      <Suspense fallback={<SkeletonText paragraph lineCount={3} />}>
+        <FleetMap vehicles={vehicles} />
+      </Suspense>
       <div className="table-card" style={{ marginBottom: 28 }}>
         <h3>Todos os Veículos</h3>
         <table>

@@ -1,0 +1,290 @@
+@use 'maplibre-gl/dist/maplibre-gl.css';
+
+/* FleetMap container com raio zero (ADR-0015 / DS 3.3 §7) */
+.fleet-map {
+  background: var(--cds-layer-01, #262626);
+  border: 1px solid var(--cds-border-subtle-01, #393939);
+  border-radius: 0;
+  padding: 16px;
+  margin-bottom: 24px;
+  position: relative;
+
+  h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--cds-text-primary, #f4f4f4);
+  }
+}
+
+.map-container {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  border-radius: 0;
+  overflow: hidden;
+  border: 1px solid var(--cds-border-subtle-01, #393939);
+  background-color: var(--ft-map-land, #161616);
+}
+
+.maplibregl-map {
+  width: 100%;
+  height: 100%;
+  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Oculta atribuição nativa em HTML para utilizar o componente React CreditoMapa seguro */
+.maplibregl-ctrl-attrib {
+  display: none !important;
+}
+
+/* Controles de zoom e navegação com raio zero e tokens Carbon */
+.maplibregl-ctrl-group {
+  border-radius: 0 !important;
+  background: var(--cds-layer-01, #262626) !important;
+  border: 1px solid var(--cds-border-subtle-01, #393939) !important;
+  box-shadow: none !important;
+
+  button {
+    border-radius: 0 !important;
+    border-bottom: 1px solid var(--cds-border-subtle-01, #393939) !important;
+    width: 32px !important;
+    height: 32px !important;
+
+    &:last-child {
+      border-bottom: none !important;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--cds-focus, #007d79) !important;
+      outline-offset: 2px !important;
+    }
+  }
+}
+
+[data-theme='light'] .maplibregl-ctrl-group {
+  background: #ffffff !important;
+  border-color: var(--cds-border-subtle-01, #e0e0e0) !important;
+
+  button {
+    border-bottom-color: var(--cds-border-subtle-01, #e0e0e0) !important;
+  }
+}
+
+/* Marcadores acessíveis (elementos <button> com anel de foco duplo afastado) */
+.ft-map-marker {
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+  touch-action: manipulation;
+
+  &:focus-visible {
+    outline: 2px solid var(--cds-focus, #007d79) !important;
+    outline-offset: 2px !important;
+    z-index: 100 !important;
+  }
+}
+
+/* Popup veicular com tokens Carbon e raio zero */
+.ft-map-popup {
+  z-index: 1000;
+
+  .maplibregl-popup-content {
+    background: var(--cds-layer-01, #262626);
+    color: var(--cds-text-primary, #f4f4f4);
+    border: 1px solid var(--cds-border-subtle-01, #393939);
+    border-radius: 0 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    padding: 12px 14px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    min-width: 220px;
+  }
+
+  .maplibregl-popup-tip {
+    border-top-color: var(--cds-layer-01, #262626);
+    border-bottom-color: var(--cds-layer-01, #262626);
+    border-left-color: var(--cds-layer-01, #262626);
+    border-right-color: var(--cds-layer-01, #262626);
+  }
+
+  .maplibregl-popup-close-button {
+    color: var(--cds-text-primary, #f4f4f4);
+    font-size: 16px;
+    padding: 2px 6px;
+    top: 4px;
+    right: 4px;
+    border-radius: 0;
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--cds-layer-02, #393939);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--cds-focus, #007d79);
+      outline-offset: 2px;
+    }
+  }
+}
+
+[data-theme='light'] .ft-map-popup {
+  .maplibregl-popup-content {
+    background: #ffffff;
+    color: var(--cds-text-primary, #161616);
+    border-color: var(--cds-border-subtle-01, #e0e0e0);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .maplibregl-popup-tip {
+    border-top-color: #ffffff;
+    border-bottom-color: #ffffff;
+    border-left-color: #ffffff;
+    border-right-color: #ffffff;
+  }
+
+  .maplibregl-popup-close-button {
+    color: var(--cds-text-primary, #161616);
+
+    &:hover {
+      background-color: var(--cds-layer-02, #f4f4f4);
+    }
+  }
+}
+
+.ft-map-popup-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .ft-map-popup-header {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--cds-text-primary, #f4f4f4);
+  }
+
+  .ft-map-popup-plate {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 700;
+  }
+
+  .ft-map-popup-driver {
+    font-weight: 400;
+  }
+
+  .ft-map-popup-model {
+    color: var(--cds-text-secondary, #c6c6c6);
+    font-size: 0.8rem;
+  }
+
+  .ft-map-popup-metrics {
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  .ft-map-popup-updated,
+  .ft-map-popup-route {
+    font-size: 0.75rem;
+    color: var(--cds-text-secondary, #c6c6c6);
+  }
+}
+
+[data-theme='light'] .ft-map-popup-body {
+  .ft-map-popup-header {
+    color: var(--cds-text-primary, #161616);
+  }
+
+  .ft-map-popup-model,
+  .ft-map-popup-updated,
+  .ft-map-popup-route {
+    color: var(--cds-text-secondary, #525252);
+  }
+}
+
+/* Crédito legal fora do canvas MapLibre */
+.ft-map-credit {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  z-index: 5;
+  background-color: rgba(22, 22, 22, 0.75);
+  padding: 3px 8px;
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--cds-text-secondary, #c6c6c6);
+  pointer-events: auto;
+  border-radius: 0;
+
+  .ft-map-credit-link {
+    color: var(--cds-link-primary, #08bdba);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+[data-theme='light'] .ft-map-credit {
+  background-color: rgba(244, 244, 244, 0.85);
+  color: var(--cds-text-secondary, #525252);
+
+  .ft-map-credit-link {
+    color: var(--cds-link-primary, #007d79);
+  }
+}
+
+/* Legenda do mapa com formas geométricas e semântica R-COR */
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 12px;
+  font-size: 0.8rem;
+  color: var(--cds-text-secondary, #c6c6c6);
+  align-items: center;
+
+  .map-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    svg {
+      flex-shrink: 0;
+    }
+  }
+}
+
+[data-theme='light'] .map-legend {
+  color: var(--cds-text-secondary, #525252);
+}
+
+/* Aviso de contingência / WebGL indisponível */
+.ft-map-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 24px;
+  text-align: center;
+  background-color: var(--ft-map-land, #161616);
+  color: var(--cds-text-primary, #f4f4f4);
+
+  h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  p {
+    font-size: 0.85rem;
+    color: var(--cds-text-secondary, #c6c6c6);
+    max-width: 440px;
+  }
+}

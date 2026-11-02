@@ -18,6 +18,18 @@
 > **Em desenvolvimento: sem autenticação até a v1.0. Não use com dados reais.**
 > A API e o painel ainda estão abertos para quem alcançar a máquina. Rode só em ambiente local ou de teste.
 
+### Mapa de fundo e privacidade
+
+Por padrão, o navegador de quem abre o FleetTrack baixa o mapa de fundo vetorial do OpenFreeMap (Hyperknot Software Kft., Hungria), passando pela Cloudflare.
+
+- **O que o provedor recebe a cada pedido:** o endereço IP, os dados do navegador, o endereço desta instalação (`Origin`) e os blocos de mapa pedidos, que revelam a área e o zoom consultados. Quando alguém amplia o mapa sobre um veículo, a área pedida fica perto dele.
+- **O que NÃO recebe:** placas, nomes, entregas, rotas e quaisquer dados da API do FleetTrack.
+- **Declarações e termos do provedor:** registros de acesso sem IP; registros de erro com IP e URL, apagados em 7 dias; registro de IP por até 30 dias em incidente de segurança. A Cloudflare tem política própria. O serviço é oferecido "no estado em que se encontra" (AS-IS), sem garantia ou SLA, e pode acabar sem aviso prévio. Os termos exigem ao menos 18 anos e adotam a lei húngara, com arbitragem em Budapeste.
+- **Sua responsabilidade:** como controlador, avalie a base legal, informe operadores e motoristas e avalie a transferência internacional (LGPD, art. 33).
+- **Como desligar (para não enviar nada):** deixe `MAP_TILEJSON_URL` e `MAP_CSP_ORIGINS` vazias nas variáveis de ambiente. O painel continuará funcionando normalmente com todos os marcadores, popups e tabelas sobre fundo liso. Para apontar para outro serviço no esquema OpenMapTiles, utilize as variáveis `MAP_*`.
+
+> Este resumo não é aconselhamento jurídico.
+
 ## O que ele faz
 
 - **Visão geral da frota:** total de veículos, quantos estão em rota, entregas concluídas e velocidade média, atualizados sozinhos.
@@ -111,19 +123,19 @@ flowchart LR
     U[Navegador] -->|:3000| F[Frontend<br/>React + Nginx]
     F -->|/api| B[API<br/>ASP.NET Core]
     B --> D[(PostgreSQL)]
-    F -.->|tiles do mapa| M[OpenStreetMap]
+    F -.->|tiles vetoriais| M[OpenFreeMap]
 ```
 
 - O **frontend** é um app React servido pelo Nginx, que também encaminha `/api` para o backend.
 - O **backend** é uma API ASP.NET Core com Entity Framework Core.
 - O **banco** é um PostgreSQL 16. A API cria e atualiza o esquema na subida, com as [migrações do EF Core](backend/Migrations), e grava os dados de demonstração quando as tabelas estão vazias ([`SeedDemonstracao.cs`](backend/Data/SeedDemonstracao.cs)). Para migrar sem subir a API, use `dotnet FleetApi.dll migrate`.
-- O **mapa** usa Leaflet com tiles do OpenStreetMap, escurecidos por CSS para combinar com o tema. Para usar outro provedor, troque a URL em [`frontend/src/components/FleetMap.tsx`](frontend/src/components/FleetMap.tsx). Em uso intenso, siga a [política de uso de tiles do OpenStreetMap](https://operations.osmfoundation.org/policies/tiles/) ou use um provedor próprio.
+- O **mapa** usa MapLibre GL carregado sob demanda (chunk próprio) com tiles vetoriais do OpenFreeMap em estilo próprio sem vegetação, relevo ou pontos de interesse. Oferece suporte completo a teclado (WCAG 2.2 AA) e respeita temas claro e escuro. Para desativar ou trocar o provedor, consulte a seção [Mapa de fundo e privacidade](#mapa-de-fundo-e-privacidade) e as [variáveis de ambiente do mapa](#mapa).
 
 ### Tecnologias
 
 | Camada | Stack |
 |---|---|
-| Frontend | React 19, TypeScript, Vite, Recharts, Leaflet, Lucide |
+| Frontend | React 19, TypeScript, Vite, Recharts, MapLibre GL, IBM Carbon, Lucide |
 | Backend | .NET 10, ASP.NET Core, Entity Framework Core, Npgsql |
 | Banco | PostgreSQL 16 |
 | Infra | Docker Compose, Nginx |

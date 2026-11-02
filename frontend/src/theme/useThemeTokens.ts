@@ -28,6 +28,21 @@ export interface ThemeTokens {
   layer02: string
   textPrimary: string
 
+  // Tokens cartográficos MapLibre (DS 3.3 §6.1 / ADR-0016)
+  mapLand: string
+  mapWater: string
+  mapBoundary: string
+  mapRoad: string
+  mapRoadCasing: string
+  mapRoadMinor: string
+  mapLabel: string
+  mapLabelHalo: string
+  mapRouteActive: string
+  mapRouteCompleted: string
+  mapMarkerEnroute: string
+  mapMarkerStopped: string
+  mapMarkerMaintenance: string
+
   [key: string]: string
 }
 
@@ -51,6 +66,19 @@ export const DARK_FALLBACKS: Record<string, string> = {
   '--cds-border-subtle-01': '#393939',
   '--cds-layer-02': '#393939',
   '--cds-text-primary': '#f4f4f4',
+  '--ft-map-land': '#161616',
+  '--ft-map-water': '#12161a',
+  '--ft-map-boundary': '#6f6f6f',
+  '--ft-map-road': '#525252',
+  '--ft-map-road-casing': '#262626',
+  '--ft-map-road-minor': '#393939',
+  '--ft-map-label': '#f4f4f4',
+  '--ft-map-label-halo': '#161616',
+  '--ft-map-route-active': '#33b1ff',
+  '--ft-map-route-completed': '#6f6f6f',
+  '--ft-map-marker-enroute': '#33b1ff',
+  '--ft-map-marker-stopped': '#f1c21b',
+  '--ft-map-marker-maintenance': '#da1e28',
 }
 
 export const LIGHT_FALLBACKS: Record<string, string> = {
@@ -73,6 +101,19 @@ export const LIGHT_FALLBACKS: Record<string, string> = {
   '--cds-border-subtle-01': '#e0e0e0',
   '--cds-layer-02': '#f4f4f4',
   '--cds-text-primary': '#161616',
+  '--ft-map-land': '#f4f4f4',
+  '--ft-map-water': '#cfdde6',
+  '--ft-map-boundary': '#8d8d8d',
+  '--ft-map-road': '#ffffff',
+  '--ft-map-road-casing': '#c6c6c6',
+  '--ft-map-road-minor': '#e0e0e0',
+  '--ft-map-label': '#161616',
+  '--ft-map-label-halo': '#ffffff',
+  '--ft-map-route-active': '#0072c3',
+  '--ft-map-route-completed': '#8d8d8d',
+  '--ft-map-marker-enroute': '#0072c3',
+  '--ft-map-marker-stopped': '#b28600',
+  '--ft-map-marker-maintenance': '#da1e28',
 }
 
 function getActiveDomTheme(): Theme {
@@ -128,6 +169,20 @@ export function readThemeTokens(themeOverride?: Theme): ThemeTokens {
   const layer02 = get('--cds-layer-02')
   const textPrimary = get('--cds-text-primary')
 
+  const mapLand = get('--ft-map-land')
+  const mapWater = get('--ft-map-water')
+  const mapBoundary = get('--ft-map-boundary')
+  const mapRoad = get('--ft-map-road')
+  const mapRoadCasing = get('--ft-map-road-casing')
+  const mapRoadMinor = get('--ft-map-road-minor')
+  const mapLabel = get('--ft-map-label')
+  const mapLabelHalo = get('--ft-map-label-halo')
+  const mapRouteActive = get('--ft-map-route-active')
+  const mapRouteCompleted = get('--ft-map-route-completed')
+  const mapMarkerEnroute = get('--ft-map-marker-enroute')
+  const mapMarkerStopped = get('--ft-map-marker-stopped')
+  const mapMarkerMaintenance = get('--ft-map-marker-maintenance')
+
   return {
     dataviz1,
     dataviz2,
@@ -149,6 +204,20 @@ export function readThemeTokens(themeOverride?: Theme): ThemeTokens {
     layer02,
     textPrimary,
 
+    mapLand,
+    mapWater,
+    mapBoundary,
+    mapRoad,
+    mapRoadCasing,
+    mapRoadMinor,
+    mapLabel,
+    mapLabelHalo,
+    mapRouteActive,
+    mapRouteCompleted,
+    mapMarkerEnroute,
+    mapMarkerStopped,
+    mapMarkerMaintenance,
+
     // CSS variables
     '--ft-dataviz-1': dataviz1,
     '--ft-dataviz-2': dataviz2,
@@ -169,6 +238,37 @@ export function readThemeTokens(themeOverride?: Theme): ThemeTokens {
     '--cds-border-subtle-01': borderSubtle01,
     '--cds-layer-02': layer02,
     '--cds-text-primary': textPrimary,
+    '--ft-map-land': mapLand,
+    '--ft-map-water': mapWater,
+    '--ft-map-boundary': mapBoundary,
+    '--ft-map-road': mapRoad,
+    '--ft-map-road-casing': mapRoadCasing,
+    '--ft-map-road-minor': mapRoadMinor,
+    '--ft-map-label': mapLabel,
+    '--ft-map-label-halo': mapLabelHalo,
+    '--ft-map-route-active': mapRouteActive,
+    '--ft-map-route-completed': mapRouteCompleted,
+    '--ft-map-marker-enroute': mapMarkerEnroute,
+    '--ft-map-marker-stopped': mapMarkerStopped,
+    '--ft-map-marker-maintenance': mapMarkerMaintenance,
+  }
+}
+
+export function toMapTokens(tokens: ThemeTokens) {
+  return {
+    land: tokens.mapLand,
+    water: tokens.mapWater,
+    boundary: tokens.mapBoundary,
+    road: tokens.mapRoad,
+    roadCasing: tokens.mapRoadCasing,
+    roadMinor: tokens.mapRoadMinor,
+    label: tokens.mapLabel,
+    labelHalo: tokens.mapLabelHalo,
+    routeActive: tokens.mapRouteActive,
+    routeCompleted: tokens.mapRouteCompleted,
+    markerEnroute: tokens.mapMarkerEnroute,
+    markerStopped: tokens.mapMarkerStopped,
+    markerMaintenance: tokens.mapMarkerMaintenance,
   }
 }
 
