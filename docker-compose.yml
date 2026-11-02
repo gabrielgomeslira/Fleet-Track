@@ -23,6 +23,8 @@ services:
     restart: unless-stopped
     environment:
       ConnectionStrings__Default: ${CONNECTION_STRING}
+      # Sem valor padrao "true": ausente = desligado (seguro para producao).
+      FLEET_DEMO_MODE: ${FLEET_DEMO_MODE:-false}
       ASPNETCORE_URLS: http://+:5000
     ports:
       - "${BACKEND_PORT}:5000"

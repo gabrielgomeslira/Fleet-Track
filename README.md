@@ -173,9 +173,8 @@ A API vai mudar antes da v1.0: rotas versionadas em `/api/v1`, autenticação e 
 ## Estrutura do repositório
 
 ```
-backend/     API ASP.NET Core (controllers, modelos, acesso a dados)
+backend/     API ASP.NET Core (controllers, modelos, migrações e dados de demonstração)
 frontend/    Painel React + Vite, servido pelo Nginx
-db/          Esquema e dados de demonstração do PostgreSQL
 docs/        Documentação, decisões de arquitetura (adr/) e imagens
 .github/     Templates de issue e PR e CODEOWNERS
 ```

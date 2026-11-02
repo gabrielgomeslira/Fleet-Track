@@ -56,7 +56,6 @@ backend/              API ASP.NET Core (FleetApi.csproj)
 frontend/             React + Vite; testes ao lado do código (X.test.ts(x))
 tests/FleetApi.Tests/ testes do backend (xUnit + Postgres real); Infra/ = fixtures
 e2e/  bench/          testes ponta a ponta e carga, quando existirem
-db/                   scripts de banco
 scripts/              shell usados pela CI
 docs/                 documentação, ADRs (docs/adr), contrato da API (docs/api)
 .github/              workflows, templates, CODEOWNERS
