@@ -1,5 +1,6 @@
 import { Popup } from 'maplibre-gl'
 import type { Vehicle, Delivery } from '../../types'
+import { formatarPercentual, formatarVelocidade } from '../../formatos'
 
 export interface PopupVeiculoOpcoes {
   veiculo: Vehicle
@@ -48,7 +49,9 @@ export function construirConteudoPopup(veiculo: Vehicle, entrega?: Delivery | nu
   // Métricas: Velocidade e Combustível
   const metricas = document.createElement('div')
   metricas.className = 'ft-map-popup-metrics'
-  metricas.textContent = `${Math.round(veiculo.speed)} km/h · Combustível ${veiculo.fuelLevel}%`
+  const velTexto = formatarVelocidade(veiculo.speed)
+  const combTexto = formatarPercentual(veiculo.fuelLevel)
+  metricas.textContent = `${velTexto} · Combustível ${combTexto}`
   container.appendChild(metricas)
 
   // Horário da última posição registrada

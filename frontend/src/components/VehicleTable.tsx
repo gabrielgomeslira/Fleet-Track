@@ -1,4 +1,5 @@
 import StatusBadge from './StatusBadge'
+import { formatarPercentual, formatarVelocidade } from '../formatos'
 import type { Vehicle } from '../types'
 
 interface Props {
@@ -28,8 +29,8 @@ export default function VehicleTable({ vehicles }: Props) {
               </td>
               <td>{v.driverName}</td>
               <td>{v.model}</td>
-              <td>{v.speed.toFixed(0)} km/h</td>
-              <td>{v.fuelLevel}%</td>
+              <td>{formatarVelocidade(v.speed)}</td>
+              <td>{formatarPercentual(v.fuelLevel)}</td>
               <td>
                 <StatusBadge status={v.status} />
               </td>

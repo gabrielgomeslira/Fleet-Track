@@ -30,7 +30,7 @@ export default function StatsCards({ stats }: Props) {
     },
     {
       label: 'Vel. Média',
-      value: `${stats.avgSpeed}`,
+      value: stats.avgSpeed != null ? `${stats.avgSpeed}` : 'sem dado',
       sub: 'km/h (em rota)',
       color: '#f97316',
       icon: Gauge,
@@ -41,7 +41,10 @@ export default function StatsCards({ stats }: Props) {
     <div className="stats-grid">
       {cards.map((c) => (
         <div key={c.label} className="stat-card">
-          <div className="icon-wrapper" style={{ background: `color-mix(in srgb, ${c.color} 12%, transparent)` }}>
+          <div
+            className="icon-wrapper"
+            style={{ background: `color-mix(in srgb, ${c.color} 12%, transparent)` }}
+          >
             <c.icon size={20} color={c.color} />
           </div>
           <span className="label">{c.label}</span>

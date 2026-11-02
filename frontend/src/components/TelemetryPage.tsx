@@ -9,7 +9,7 @@ import {
   CartesianGrid,
 } from 'recharts'
 import { api } from '../api'
-import { formatarHora, formatarInstante, formatarPercentual } from '../formatos'
+import { formatarHora, formatarInstante, formatarPercentual, formatarVelocidade } from '../formatos'
 import type { Vehicle, TelemetryRecord } from '../types'
 import StatusBadge from './StatusBadge'
 import { useThemeTokens } from '../theme/useThemeTokens'
@@ -34,8 +34,8 @@ export default function TelemetryPage({ vehicles }: Props) {
 
   const chartData = [...records].reverse().map((r) => ({
     time: formatarHora(r.recordedAt, { hour: '2-digit', minute: '2-digit' }),
-    speed: Math.round(r.speed),
-    fuel: r.fuelLevel,
+    speed: r.speed != null ? Math.round(r.speed) : null,
+    fuel: r.fuelLevel != null ? r.fuelLevel : null,
   }))
 
   const selected = vehicles.find((v) => v.id === selectedId)
@@ -73,7 +73,7 @@ export default function TelemetryPage({ vehicles }: Props) {
           <div className="stat-card">
             <span className="label">Velocidade Atual</span>
             <span className="value" style={{ fontSize: '1.2rem' }}>
-              {selected.speed.toFixed(0)} km/h
+              {formatarVelocidade(selected.speed)}
             </span>
           </div>
           <div className="stat-card">
@@ -123,6 +123,7 @@ export default function TelemetryPage({ vehicles }: Props) {
                   stroke={tokens.chartSpeed}
                   strokeWidth={2}
                   dot={false}
+                  connectNulls={false}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -158,6 +159,7 @@ export default function TelemetryPage({ vehicles }: Props) {
                   stroke={tokens.chartFuel}
                   strokeWidth={2}
                   dot={false}
+                  connectNulls={false}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -184,7 +186,7 @@ export default function TelemetryPage({ vehicles }: Props) {
                   <td>{formatarInstante(r.recordedAt)}</td>
                   <td>{r.latitude.toFixed(4)}</td>
                   <td>{r.longitude.toFixed(4)}</td>
-                  <td>{r.speed.toFixed(0)} km/h</td>
+                  <td>{formatarVelocidade(r.speed)}</td>
                   <td>{formatarPercentual(r.fuelLevel)}</td>
                 </tr>
               ))}

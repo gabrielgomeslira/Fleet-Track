@@ -180,8 +180,8 @@ const DEMO_VEHICLES = [
     driverName: 'Sem Posição',
     latitude: null,
     longitude: null,
-    speed: 0,
-    fuelLevel: 50,
+    speed: null,
+    fuelLevel: null,
     status: 'parado',
     updatedAt: '2026-11-01T22:00:00Z',
   },
@@ -213,7 +213,8 @@ const server = http.createServer((req, res) => {
           tilejsonUrl: 'https://tiles.openfreemap.org/planet',
           glyphsUrl: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
           styleUrl: '',
-          credit: 'OpenFreeMap|https://openfreemap.org;© OpenMapTiles|https://www.openmaptiles.org/',
+          credit:
+            'OpenFreeMap|https://openfreemap.org;© OpenMapTiles|https://www.openmaptiles.org/',
         }),
       )
     } else {
@@ -354,7 +355,11 @@ server.listen(PORT, async () => {
         const reqId = msg.params.requestId
         const sessId = msg.sessionId
 
-        if (url.includes('tiles.openfreemap.org') && url.includes('/planet') && !url.includes('.pbf')) {
+        if (
+          url.includes('tiles.openfreemap.org') &&
+          url.includes('/planet') &&
+          !url.includes('.pbf')
+        ) {
           // TileJSON local mock
           const tileJsonBody = Buffer.from(
             JSON.stringify({
@@ -863,7 +868,9 @@ server.listen(PORT, async () => {
       allPassed = false
       console.log('  - Mapa com veículo sem posição: FALHA', valVeiculoSemPos)
     } else {
-      console.log('  - Veículo sem posição não possui marcador no mapa (10 marcadores exibidos): OK')
+      console.log(
+        '  - Veículo sem posição não possui marcador no mapa (10 marcadores exibidos): OK',
+      )
     }
 
     // Navega para /vehicles para verificar a tabela de veículos
@@ -876,16 +883,25 @@ server.listen(PORT, async () => {
         const rowV11 = rows.find(r => r.textContent.includes('SEM-0000'));
         if (!rowV11) return { error: 'Linha do veículo SEM-0000 não encontrada' };
         const cells = Array.from(rowV11.querySelectorAll('td')).map(td => td.textContent.trim());
-        // Coluna 3: Latitude, Coluna 4: Longitude
+        // Coluna 3: Latitude, Coluna 4: Longitude, Coluna 5: Velocidade, Coluna 6: Combustível
         const latCell = cells[3];
         const lngCell = cells[4];
-        const semDadoOk = latCell === 'sem dado' && lngCell === 'sem dado';
+        const speedCell = cells[5];
+        const fuelCell = cells[6];
+        const semDadoOk =
+          latCell === 'sem dado' &&
+          lngCell === 'sem dado' &&
+          speedCell === 'sem dado' &&
+          fuelCell === 'sem dado';
         const markerV11 = document.querySelector('[data-vehicle-id="v11"]');
+        const fuelBarV11 = rowV11.querySelector('.fuel-bar');
         return {
           encontrado: true,
           latCell,
           lngCell,
-          semDadoOk,
+          speedCell,
+          fuelCell,
+          semDadoOk: semDadoOk && fuelBarV11 === null,
           semMarcadorNoMapa: markerV11 === null,
         };
       })())`,
@@ -904,7 +920,9 @@ server.listen(PORT, async () => {
       allPassed = false
       console.log('  - Tabela /vehicles com veículo sem posição: FALHA', valTabela)
     } else {
-      console.log('  - Tabela /vehicles exibe "sem dado" para latitude e longitude nulas: OK')
+      console.log(
+        '  - Tabela /vehicles exibe "sem dado" para latitude, longitude, velocidade e combustível nulos (sem barra falsa): OK',
+      )
       console.log('  - Mapa em /vehicles sem marcador para o veículo nulo: OK')
     }
 

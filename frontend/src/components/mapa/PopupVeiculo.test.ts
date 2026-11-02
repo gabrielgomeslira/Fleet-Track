@@ -49,8 +49,34 @@ describe('PopupVeiculo (T-81 / STRIDE / WCAG 2.2 AA)', () => {
       expect(conteudo.querySelector('.ft-map-popup-driver')?.textContent).toBe('Fernanda Rocha')
       expect(conteudo.querySelector('.ft-map-popup-model')?.textContent).toBe('Mercedes-Benz Atego')
       expect(conteudo.querySelector('.ft-map-popup-metrics')?.textContent).toContain('68 km/h')
-      expect(conteudo.querySelector('.ft-map-popup-metrics')?.textContent).toContain('Combustível 82%')
-      expect(conteudo.querySelector('.ft-map-popup-route')?.textContent).toBe('Rota: Curitiba → Joinville')
+      expect(conteudo.querySelector('.ft-map-popup-metrics')?.textContent).toContain(
+        'Combustível 82%',
+      )
+      expect(conteudo.querySelector('.ft-map-popup-route')?.textContent).toBe(
+        'Rota: Curitiba → Joinville',
+      )
+    })
+
+    it('renderiza "sem dado" para velocidade e combustível quando nulos', () => {
+      const veiculoNulo: Vehicle = {
+        ...mockVeiculo,
+        speed: null,
+        fuelLevel: null,
+      }
+      const conteudo = construirConteudoPopup(veiculoNulo, mockEntrega)
+      const metricasEl = conteudo.querySelector('.ft-map-popup-metrics')
+      expect(metricasEl?.textContent).toBe('sem dado · Combustível sem dado')
+    })
+
+    it('diferencia 0 real de nulo para velocidade (0 km/h) e combustível (0%)', () => {
+      const veiculoZero: Vehicle = {
+        ...mockVeiculo,
+        speed: 0,
+        fuelLevel: 0,
+      }
+      const conteudo = construirConteudoPopup(veiculoZero, mockEntrega)
+      const metricasEl = conteudo.querySelector('.ft-map-popup-metrics')
+      expect(metricasEl?.textContent).toBe('0 km/h · Combustível 0%')
     })
 
     it('neutraliza qualquer injeção de HTML/XSS vinda de campos da API (STRIDE)', () => {
@@ -157,7 +183,11 @@ describe('PopupVeiculo (T-81 / STRIDE / WCAG 2.2 AA)', () => {
       expect(onTabOut).toHaveBeenCalledWith('next')
 
       // Pressiona Shift+Tab
-      const shiftTabEvent = new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true })
+      const shiftTabEvent = new KeyboardEvent('keydown', {
+        key: 'Tab',
+        shiftKey: true,
+        bubbles: true,
+      })
       popupEl.dispatchEvent(shiftTabEvent)
 
       expect(onTabOut).toHaveBeenCalledWith('prev')

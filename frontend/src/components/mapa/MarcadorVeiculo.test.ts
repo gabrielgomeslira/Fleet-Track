@@ -48,6 +48,24 @@ describe('MarcadorVeiculo (T-81 / H-22 / DS §6.3)', () => {
       expect(label).toBe('Veículo BRA-2E19 — Em rota a 84 km/h')
     })
 
+    it('gera rótulo acessível para veículo em rota com velocidade nula (sem dado)', () => {
+      const veiculoRotaNula: Vehicle = {
+        ...mockVeiculoRota,
+        speed: null,
+      }
+      const label = gerarAriaLabelMarcador(veiculoRotaNula)
+      expect(label).toBe('Veículo BRA-2E19 — Em rota (sem dado)')
+    })
+
+    it('gera rótulo acessível para veículo em rota com velocidade zero (0 real)', () => {
+      const veiculoRotaZero: Vehicle = {
+        ...mockVeiculoRota,
+        speed: 0,
+      }
+      const label = gerarAriaLabelMarcador(veiculoRotaZero)
+      expect(label).toBe('Veículo BRA-2E19 — Em rota a 0 km/h')
+    })
+
     it('gera rótulo acessível para veículo parado', () => {
       const label = gerarAriaLabelMarcador(mockVeiculoParado)
       expect(label).toBe('Veículo KLT-9021 — Parado')

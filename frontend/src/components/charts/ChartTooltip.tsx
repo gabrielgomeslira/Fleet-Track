@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 
 export interface ChartTooltipPayloadItem {
   name?: string
-  value?: number | string
+  value?: number | string | null
   color?: string
   dataKey?: string | number
   unit?: string
@@ -95,8 +95,9 @@ export function ChartTooltip({ active, payload, label, unit }: ChartTooltipProps
                 color: 'var(--cds-text-primary)',
               }}
             >
-              {item.value}
-              {unit ? ` ${unit}` : item.unit ? ` ${item.unit}` : ''}
+              {item.value != null
+                ? `${item.value}${unit ? ` ${unit}` : item.unit ? ` ${item.unit}` : ''}`
+                : 'sem dado'}
             </span>
           </div>
         ))}

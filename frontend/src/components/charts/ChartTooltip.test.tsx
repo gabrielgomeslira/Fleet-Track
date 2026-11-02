@@ -15,9 +15,7 @@ describe('ChartTooltip (T-80 / DS §5)', () => {
   })
 
   it('renderiza com fundo --cds-layer-02, borda --cds-border-subtle-01 e raio 0', () => {
-    const payload = [
-      { name: 'Velocidade', value: 85, color: '#08bdba', unit: 'km/h' },
-    ]
+    const payload = [{ name: 'Velocidade', value: 85, color: '#08bdba', unit: 'km/h' }]
 
     const { container } = render(<ChartTooltip active={true} label="14:30" payload={payload} />)
     const tooltip = container.querySelector('.ft-chart-tooltip') as HTMLElement
@@ -29,9 +27,7 @@ describe('ChartTooltip (T-80 / DS §5)', () => {
   })
 
   it('renderiza números com Plex Mono tabular e respeita unidade', () => {
-    const payload = [
-      { name: 'Combustível', value: 72, color: '#42be65' },
-    ]
+    const payload = [{ name: 'Combustível', value: 72, color: '#42be65' }]
 
     const { container } = render(
       <ChartTooltip active={true} label="14:30" payload={payload} unit="%" />,
@@ -45,5 +41,26 @@ describe('ChartTooltip (T-80 / DS §5)', () => {
     expect(valueEl.textContent).toContain('72 %')
     expect(valueEl.style.fontFamily).toContain('Plex Mono')
     expect(valueEl.style.fontVariantNumeric).toBe('tabular-nums')
+  })
+
+  it('renderiza "sem dado" quando o valor for nulo ou indefinido (evita zero falso)', () => {
+    const payload = [{ name: 'Velocidade', value: null, color: '#08bdba', unit: 'km/h' }]
+
+    const { container } = render(<ChartTooltip active={true} label="14:30" payload={payload} />)
+
+    const valueEl = container.querySelector('.ft-chart-tooltip__value') as HTMLElement
+    expect(valueEl).toBeDefined()
+    expect(valueEl.textContent).toBe('sem dado')
+    expect(valueEl.textContent).not.toContain('km/h')
+  })
+
+  it('preserva 0 real com a unidade', () => {
+    const payload = [{ name: 'Velocidade', value: 0, color: '#08bdba', unit: 'km/h' }]
+
+    const { container } = render(<ChartTooltip active={true} label="14:30" payload={payload} />)
+
+    const valueEl = container.querySelector('.ft-chart-tooltip__value') as HTMLElement
+    expect(valueEl).toBeDefined()
+    expect(valueEl.textContent).toBe('0 km/h')
   })
 })

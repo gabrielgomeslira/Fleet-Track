@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import TelemetryPage from './TelemetryPage'
 import type { Vehicle } from '../types'
 import { api } from '../api'
@@ -95,8 +95,46 @@ describe('TelemetryPage — LineCharts temáticos (T-80 / DS §5)', () => {
     render(<TelemetryPage vehicles={mockVehicles} />)
 
     expect(screen.getByRole('heading', { level: 1, name: /telemetria/i })).toBeDefined()
-    expect(
-      screen.getByText(/selecione um veículo para visualizar a telemetria/i),
-    ).toBeDefined()
+    expect(screen.getByText(/selecione um veículo para visualizar a telemetria/i)).toBeDefined()
+  })
+
+  it('exibe "sem dado" nos stat-cards e registros da tabela quando velocidade e combustível forem nulos', async () => {
+    const veiculoNulos: Vehicle = {
+      id: 'v-nul',
+      plate: 'NUL-1234',
+      model: 'Scania R450',
+      driverName: 'Maria Santos',
+      status: 'em_rota',
+      latitude: -23.55,
+      longitude: -46.63,
+      speed: null,
+      fuelLevel: null,
+      updatedAt: '2026-10-31T12:00:00Z',
+    }
+
+    const telemetriaNula = [
+      {
+        id: 't-nul-1',
+        latitude: -23.55,
+        longitude: -46.63,
+        speed: null,
+        fuelLevel: null,
+        recordedAt: '2026-10-31T12:00:00Z',
+      },
+    ]
+
+    vi.mocked(api.getTelemetry).mockResolvedValue(telemetriaNula)
+
+    render(<TelemetryPage vehicles={[veiculoNulos]} />)
+
+    const select = screen.getByRole('combobox')
+    fireEvent.change(select, { target: { value: 'v-nul' } })
+
+    expect(await screen.findByText('NUL-1234')).toBeDefined()
+
+    // No stat-card e na tabela, deve aparecer "sem dado" para speed e fuelLevel
+    const semDadoElements = await screen.findAllByText('sem dado')
+    // 2 nos stat-cards (velocidade atual e combustível) + 2 na tabela de telemetria
+    expect(semDadoElements.length).toBeGreaterThanOrEqual(4)
   })
 })

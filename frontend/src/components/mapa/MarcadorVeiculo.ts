@@ -12,7 +12,9 @@ export interface MarcadorVeiculoOpcoes {
 export function gerarAriaLabelMarcador(v: Vehicle): string {
   const statusFormatado =
     v.status === 'em_rota'
-      ? `Em rota a ${Math.round(v.speed)} km/h`
+      ? v.speed != null
+        ? `Em rota a ${Math.round(v.speed)} km/h`
+        : 'Em rota (sem dado)'
       : v.status === 'parado'
         ? 'Parado'
         : 'Em manutenção'

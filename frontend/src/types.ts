@@ -6,9 +6,10 @@ export interface Vehicle {
   status: string
   latitude: number | null
   longitude: number | null
-  speed: number
-  fuelLevel: number
+  speed: number | null
+  fuelLevel: number | null
   updatedAt: string
+  lastSignalAt?: string | null
 }
 
 export interface Delivery {
@@ -26,8 +27,8 @@ export interface TelemetryRecord {
   id: string
   latitude: number
   longitude: number
-  speed: number
-  fuelLevel: number
+  speed: number | null
+  fuelLevel: number | null
   recordedAt: string
 }
 
@@ -41,7 +42,7 @@ export interface DashboardStats {
   inTransit: number
   pending: number
   cancelled: number
-  avgSpeed: number
+  avgSpeed: number | null
   deliveryRate: number
   deliveriesPerDay: { date: string; count: number }[]
 }

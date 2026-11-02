@@ -193,3 +193,21 @@ export function formatarPercentual(valor?: number | string | null): string {
   const inteiro = Math.round(num)
   return `${Object.is(inteiro, -0) ? 0 : inteiro}%`
 }
+
+/**
+ * Formata velocidade com valor arredondado para inteiro (ex: 70 km/h).
+ * Inválido ou ausente -> "sem dado".
+ */
+export function formatarVelocidade(valor?: number | string | null): string {
+  if (valor === null || valor === undefined || valor === '') {
+    return SEM_DADO
+  }
+
+  const num = typeof valor === 'number' ? valor : Number(valor)
+  if (!Number.isFinite(num)) {
+    return SEM_DADO
+  }
+
+  const inteiro = Math.round(num)
+  return `${Object.is(inteiro, -0) ? 0 : inteiro} km/h`
+}

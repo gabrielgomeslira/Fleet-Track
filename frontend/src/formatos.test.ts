@@ -6,6 +6,7 @@ import {
   formatarDia,
   formatarEntregueEm,
   formatarPercentual,
+  formatarVelocidade,
 } from './formatos'
 
 declare const process: {
@@ -214,6 +215,34 @@ describe('Formatadores no fuso local e internacionalização (T-101 / H-28)', ()
       expect(formatarEntregueEm(null, 'desconhecido')).toBe(SEM_DADO)
       expect(formatarEntregueEm(null, null)).toBe(SEM_DADO)
       expect(formatarEntregueEm(null, '')).toBe(SEM_DADO)
+    })
+  })
+
+  describe('formatarVelocidade: formatação de velocidade com unidade km/h ou sem dado', () => {
+    it('formata valor numérico inteiro com "km/h"', () => {
+      expect(formatarVelocidade(70)).toBe('70 km/h')
+      expect(formatarVelocidade(0)).toBe('0 km/h')
+      expect(formatarVelocidade(120)).toBe('120 km/h')
+    })
+
+    it('arredonda valores decimais para o inteiro mais próximo', () => {
+      expect(formatarVelocidade(68.4)).toBe('68 km/h')
+      expect(formatarVelocidade(68.6)).toBe('69 km/h')
+      expect(formatarVelocidade(72.5)).toBe('73 km/h')
+    })
+
+    it('aceita strings numéricas válidas', () => {
+      expect(formatarVelocidade('80')).toBe('80 km/h')
+      expect(formatarVelocidade('0')).toBe('0 km/h')
+    })
+
+    it('retorna "sem dado" para nulo, indefinido, vazio ou não-finito', () => {
+      expect(formatarVelocidade(null)).toBe(SEM_DADO)
+      expect(formatarVelocidade(undefined)).toBe(SEM_DADO)
+      expect(formatarVelocidade('')).toBe(SEM_DADO)
+      expect(formatarVelocidade(NaN)).toBe(SEM_DADO)
+      expect(formatarVelocidade(Infinity)).toBe(SEM_DADO)
+      expect(formatarVelocidade('invalido')).toBe(SEM_DADO)
     })
   })
 })
