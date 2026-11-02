@@ -159,7 +159,8 @@ Todas as rotas respondem JSON. Pelo painel, use `http://localhost:3000/api/...`.
 | GET | `/api/deliveries/{id}` | Detalhes de uma entrega |
 | GET | `/api/telemetry/{vehicleId}` | Histórico de telemetria de um veículo |
 | GET | `/api/dashboard/stats` | Números agregados do dashboard |
-| POST | `/api/telemetry/simulate` | Simula um passo de movimentação da frota |
+
+Não há endpoint de simulação. No modo demo (`FLEET_DEMO_MODE=true`, padrão `false`), um job do backend move os veículos em rota a cada 30 s, ao longo do trajeto da entrega em andamento, e grava um registro de telemetria para todos os veículos.
 
 Exemplo:
 

@@ -1,5 +1,6 @@
 using FleetApi.Data;
 using FleetApi.Infra;
+using FleetApi.Jobs;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +18,14 @@ builder.Services.AddDbContext<AppDbContext>((sp, options) =>
     options.UseNpgsql(
         ConexaoBanco.Resolver(sp.GetRequiredService<IConfiguration>()),
         npgsql => npgsql.EnableRetryOnFailure(maxRetryCount: 3)));
+
+// Simulação da frota: só no modo demo (FLEET_DEMO_MODE=true; padrão false). Fora dele o job nem é
+// registrado, então nenhuma posição é alterada (ADR-0007).
+builder.Services.AddSingleton(TimeProvider.System);
+if (SimulacaoJob.Habilitado(builder.Configuration))
+{
+    builder.Services.AddHostedService<SimulacaoJob>();
+}
 
 builder.Services.AddCors(options =>
 {

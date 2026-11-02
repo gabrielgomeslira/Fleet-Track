@@ -35,35 +35,4 @@ public class TelemetryController : ControllerBase
 
         return Ok(records);
     }
-
-    [HttpPost("simulate")]
-    public async Task<IActionResult> Simulate()
-    {
-        var rng = new Random();
-        var vehicles = await _db.Vehicles
-            .Where(v => v.Status == "em_rota")
-            .ToListAsync();
-
-        foreach (var v in vehicles)
-        {
-            v.Latitude += (rng.NextDouble() - 0.5) * 0.02;
-            v.Longitude += (rng.NextDouble() - 0.5) * 0.02;
-            v.Speed = 40 + rng.NextDouble() * 60;
-            v.FuelLevel = Math.Max(5, v.FuelLevel - rng.Next(0, 2));
-            v.UpdatedAt = DateTime.UtcNow;
-
-            _db.TelemetryRecords.Add(new FleetApi.Models.TelemetryRecord
-            {
-                VehicleId = v.Id,
-                Latitude = v.Latitude,
-                Longitude = v.Longitude,
-                Speed = v.Speed,
-                FuelLevel = v.FuelLevel,
-                RecordedAt = DateTime.UtcNow
-            });
-        }
-
-        await _db.SaveChangesAsync();
-        return Ok(new { updated = vehicles.Count });
-    }
 }
