@@ -44,5 +44,7 @@ Ao mudar um pacote, rode `dotnet restore --force-evaluate` e commite os dois loc
 ## Escrevendo testes
 
 - Herde de `TesteComBanco`: as tabelas são limpas antes de cada teste.
-- Cada teste cria os próprios dados, com GUID novo. Não conte com o seed de `db/init.sql`: a fixture
-  aplica só o schema.
+- Cada teste cria os próprios dados, com GUID novo. Não conte com o seed de demonstração: a fixture
+  recria o schema com as migrações (`MigrateAsync`) e a API de teste sobe com o seed desligado.
+- Mudou o modelo? Gere a migração com `dotnet ef migrations add <Nome> --project backend`. O teste
+  `Modelo_do_EF_nao_diverge_das_migracoes` falha se ela faltar.

@@ -1,15 +1,18 @@
+using FleetApi.Data;
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Xunit;
 
 namespace FleetApi.Tests.Infra;
 
 /// <summary>
-/// Prepara o schema de db/init.sql (sem os INSERT) no Postgres de teste e limpa as tabelas
-/// entre os testes. Ate a T-13 nao ha migracoes.
+/// Recria o schema do zero com as migracoes do EF (MigrateAsync, sem seed) no Postgres de teste
+/// e limpa as tabelas entre os testes.
 /// </summary>
 public sealed class DbFixture : IAsyncLifetime
 {
     private static readonly string[] Tabelas = ["telemetry_records", "deliveries", "vehicles"];
+    private const string HistoricoMigracoes = "\"__EFMigrationsHistory\"";
 
     public ApiFactory Factory { get; } = new();
 
@@ -20,14 +23,17 @@ public sealed class DbFixture : IAsyncLifetime
         await using var conexao = new NpgsqlConnection(ApiFactory.ConexaoDeTeste);
         await conexao.OpenAsync();
 
-        await Executar(conexao, $"DROP TABLE IF EXISTS {string.Join(", ", Tabelas)} CASCADE");
-        foreach (var comando in LerSchemaSemInserts())
-        {
-            await Executar(conexao, comando);
-        }
+        await Executar(conexao, $"DROP TABLE IF EXISTS {string.Join(", ", Tabelas)}, {HistoricoMigracoes} CASCADE");
+
+        await using var db = CriarContexto();
+        await db.Database.MigrateAsync();
     }
 
     public async Task DisposeAsync() => await Factory.DisposeAsync();
+
+    /// <summary>Contexto direto no banco de teste, sem passar pela API (nem pelo seed da subida).</summary>
+    public static AppDbContext CriarContexto() =>
+        new(new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(ApiFactory.ConexaoDeTeste).Options);
 
     public async Task LimparAsync()
     {
@@ -46,15 +52,6 @@ public sealed class DbFixture : IAsyncLifetime
                 "Os testes apagam dados e so rodam em um banco cujo nome termina em '_test'. " +
                 "Ajuste a variavel ConnectionStrings__Default.");
         }
-    }
-
-    private static IEnumerable<string> LerSchemaSemInserts()
-    {
-        var caminho = Path.Combine(AppContext.BaseDirectory, "db", "init.sql");
-        var sql = File.ReadAllText(caminho);
-
-        return sql.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Where(c => c.Length > 0 && !c.StartsWith("INSERT", StringComparison.OrdinalIgnoreCase));
     }
 
     private static async Task Executar(NpgsqlConnection conexao, string sql)

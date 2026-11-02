@@ -12,8 +12,11 @@ builder.Services.AddControllers()
 
 builder.Services.AddProblemDetails();
 
+// Retry só de falha transitória de conexão na subida (banco ainda iniciando).
 builder.Services.AddDbContext<AppDbContext>((sp, options) =>
-    options.UseNpgsql(ConexaoBanco.Resolver(sp.GetRequiredService<IConfiguration>())));
+    options.UseNpgsql(
+        ConexaoBanco.Resolver(sp.GetRequiredService<IConfiguration>()),
+        npgsql => npgsql.EnableRetryOnFailure(maxRetryCount: 3)));
 
 builder.Services.AddCors(options =>
 {
@@ -36,6 +39,34 @@ catch (ConfiguracaoInvalidaException erro)
 {
     Console.Error.WriteLine(erro.Message);
     return 1;
+}
+
+// "dotnet FleetApi.dll migrate" aplica as migrações e sai, para quem prefere migrar no deploy (ADR-0002).
+var somenteMigrar = args.Contains("migrate", StringComparer.OrdinalIgnoreCase);
+
+// Migra na subida. MigrateAsync fica fora de transação própria: o lock do EF 9+ depende disso.
+try
+{
+    using var escopo = app.Services.CreateScope();
+    var db = escopo.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
+
+    if (!somenteMigrar && SeedDemonstracao.Habilitado(app.Configuration))
+    {
+        await SeedDemonstracao.ExecutarAsync(db);
+    }
+}
+catch (Exception erro)
+{
+    // Banco inalcançável ou migração quebrada: não faz sentido servir a API.
+    app.Logger.LogCritical(erro, "Falha ao preparar o banco de dados; a API nao vai subir.");
+    return 1;
+}
+
+if (somenteMigrar)
+{
+    app.Logger.LogInformation("Migracoes aplicadas.");
+    return 0;
 }
 
 app.UseCors();

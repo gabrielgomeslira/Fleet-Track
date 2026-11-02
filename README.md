@@ -74,6 +74,8 @@ Acesse **http://localhost:3000**. Na primeira subida, o banco é criado e popula
 
 Para parar, use `docker compose down`. Para apagar também os dados, use `docker compose down -v`.
 
+> **Atualizando de uma versão anterior à v1.0?** O esquema do banco agora é criado e versionado pela API (migrações do EF Core), e a base antiga não é migrada. Recrie-a com `docker compose down -v` antes de subir de novo. Isso apaga os dados de demonstração da instalação antiga.
+
 ### Variáveis de ambiente
 
 | Variável | Para que serve | Exemplo |
@@ -114,7 +116,7 @@ flowchart LR
 
 - O **frontend** é um app React servido pelo Nginx, que também encaminha `/api` para o backend.
 - O **backend** é uma API ASP.NET Core com Entity Framework Core.
-- O **banco** é um PostgreSQL 16. O esquema e os dados de demonstração estão em [`db/init.sql`](db/init.sql).
+- O **banco** é um PostgreSQL 16. A API cria e atualiza o esquema na subida, com as [migrações do EF Core](backend/Migrations), e grava os dados de demonstração quando as tabelas estão vazias ([`SeedDemonstracao.cs`](backend/Data/SeedDemonstracao.cs)). Para migrar sem subir a API, use `dotnet FleetApi.dll migrate`.
 - O **mapa** usa Leaflet com tiles do OpenStreetMap, escurecidos por CSS para combinar com o tema. Para usar outro provedor, troque a URL em [`frontend/src/components/FleetMap.tsx`](frontend/src/components/FleetMap.tsx). Em uso intenso, siga a [política de uso de tiles do OpenStreetMap](https://operations.osmfoundation.org/policies/tiles/) ou use um provedor próprio.
 
 ### Tecnologias

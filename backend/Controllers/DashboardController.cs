@@ -34,8 +34,11 @@ public class DashboardController : ControllerBase
             ? Math.Round((double)delivered / totalDeliveries * 100, 1)
             : 0;
 
+        // Fora da expressao: dentro dela o EF traduziria para now() (timestamptz) e nao compararia
+        // com a coluna timestamp. Como variavel, vira parametro com o mapeamento da coluna.
+        var corte = DateTime.UtcNow.AddDays(-14);
         var deliveriesPerDay = await _db.Deliveries
-            .Where(d => d.DeliveredAt != null && d.DeliveredAt > DateTime.UtcNow.AddDays(-14))
+            .Where(d => d.DeliveredAt != null && d.DeliveredAt > corte)
             .GroupBy(d => d.DeliveredAt!.Value.Date)
             .Select(g => new { Date = g.Key, Count = g.Count() })
             .OrderBy(x => x.Date)

@@ -20,9 +20,4 @@
     <ProjectReference Include="../../backend/FleetApi.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <!-- Schema usado pela fixture; copiado para a saida para nao depender do diretorio de execucao. -->
-    <Content Include="../../db/init.sql" Link="db/init.sql" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-
 </Project>
