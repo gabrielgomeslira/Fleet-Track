@@ -5,7 +5,7 @@
 **Painel open source para acompanhar uma frota logística: onde está cada veículo, como andam as entregas e o que diz a telemetria.**
 
 [![Licença MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-green.svg)](LICENSE)
-![.NET 8](https://img.shields.io/badge/.NET-8-512BD4?logo=dotnet&logoColor=white)
+![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)
 ![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
 ![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
@@ -108,7 +108,7 @@ flowchart LR
 | Camada | Stack |
 |---|---|
 | Frontend | React 19, TypeScript, Vite, Recharts, Leaflet, Lucide |
-| Backend | .NET 8, ASP.NET Core, Entity Framework Core, Npgsql |
+| Backend | .NET 10, ASP.NET Core, Entity Framework Core, Npgsql |
 | Banco | PostgreSQL 16 |
 | Infra | Docker Compose, Nginx |
 | Qualidade | ESLint, Prettier, `tsc --noEmit`, xUnit |
