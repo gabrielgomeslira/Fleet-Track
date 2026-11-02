@@ -15,6 +15,9 @@ public class TelemetryController : ControllerBase
     [HttpGet("{vehicleId:guid}")]
     public async Task<IActionResult> GetByVehicle(Guid vehicleId)
     {
+        if (!await _db.Vehicles.AnyAsync(v => v.Id == vehicleId))
+            return Problem(statusCode: StatusCodes.Status404NotFound, detail: "Veiculo nao encontrado.");
+
         var records = await _db.TelemetryRecords
             .Where(t => t.VehicleId == vehicleId)
             .OrderByDescending(t => t.RecordedAt)

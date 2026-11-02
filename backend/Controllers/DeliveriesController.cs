@@ -8,6 +8,8 @@ namespace FleetApi.Controllers;
 [Route("api/[controller]")]
 public class DeliveriesController : ControllerBase
 {
+    private static readonly string[] StatusAceitos = ["pendente", "em_transito", "entregue", "cancelado"];
+
     private readonly AppDbContext _db;
 
     public DeliveriesController(AppDbContext db) => _db = db;
@@ -15,6 +17,14 @@ public class DeliveriesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] string? status)
     {
+        if (!string.IsNullOrEmpty(status) && !StatusAceitos.Contains(status))
+        {
+            // Nao devolve o valor recebido: pode ser enorme ou conter caracteres de controle.
+            ModelState.AddModelError(nameof(status),
+                $"Valor invalido para 'status'. Valores aceitos: {string.Join(", ", StatusAceitos)}.");
+            return ValidationProblem(ModelState);
+        }
+
         var query = _db.Deliveries
             .Include(d => d.Vehicle)
             .AsQueryable();
@@ -47,7 +57,8 @@ public class DeliveriesController : ControllerBase
             .Include(d => d.Vehicle)
             .FirstOrDefaultAsync(d => d.Id == id);
 
-        if (delivery is null) return NotFound();
+        if (delivery is null)
+            return Problem(statusCode: StatusCodes.Status404NotFound, detail: "Entrega nao encontrada.");
 
         return Ok(new
         {

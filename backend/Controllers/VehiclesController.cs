@@ -42,7 +42,8 @@ public class VehiclesController : ControllerBase
             .Include(v => v.Deliveries.OrderByDescending(d => d.CreatedAt).Take(5))
             .FirstOrDefaultAsync(v => v.Id == id);
 
-        if (vehicle is null) return NotFound();
+        if (vehicle is null)
+            return Problem(statusCode: StatusCodes.Status404NotFound, detail: "Veiculo nao encontrado.");
 
         return Ok(new
         {
