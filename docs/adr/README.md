@@ -34,7 +34,7 @@ Os ADRs 0001 e 0002 não estavam no pedido do orquestrador. São pré-requisitos
 - Telemetria `GET` de um veículo: **p95 < 100 ms no servidor** com 1 milhão de linhas no veículo e 10 milhões na tabela. O alvo do PRD (< 500 ms) é viável com folga (ADR-0010).
 - Listagens: p95 < 200 ms*. `dashboard/stats`: p95 < 300 ms* (consolidar 11 queries em 2 agregações, SEC-05). `alerts`: p95 < 300 ms*. Página do veículo: bloco principal em até 2 s (H-41). Nenhum desses foi medido: os endpoints não existem.
 - Frontend: JS inicial ≤ 300 KB gzip (hoje 224,8 KiB) e chunk + worker do mapa ≤ 460 KB* (hoje 448,9 KiB, no limite). Medido em `frontend/dist` em 2026-11-02, ver ADR-0016.
-- Retenção da telemetria: 24 h por padrão, com piso de 2 h (decisão do humano, H-12).
+- Retenção da telemetria: **90 dias por padrão** (revisto em 2026-11-21: o gestor precisa rever trajetos antigos; antes, 24 h), com piso de 2 h (H-12).
 - Revogação de chave de API: imediata. Revogação de sessão de pessoa: ≤ 5 min.
 - Primeira execução: ≤ 15 min (métrica do PRD). Imagens prontas (ADR-0013) e um único segredo obrigatório (ADR-0011).
 - Disponibilidade: fora de escopo definir. É self-hosted e quem instala opera. Backup é responsabilidade de quem instala (documentar em H-19).
@@ -66,7 +66,7 @@ host: ${FLEET_BIND_ADDRESS:-127.0.0.1}:${FRONTEND_PORT:-3000}
 │  - API /api/v1 + OpenAPI         │      └──────────────────────────┘
 │  - migrações na subida (0002)    │
 │  - SimulacaoJob (só demo, 30 s)  │
-│  - ExpurgoJob (1 h, retenção 24 h)│
+│  - ExpurgoJob (1 h, retenção 90 d)│
 └──────────────────────────────────┘
 ```
 Componentes que importam no backend: `Auth` (esquemas, políticas, setup), `Ingestao` (H-16), `Consulta` (listas por cursor), `Alertas` e `SituacaoEntrega` (funções puras com relógio do servidor, ADR-0018 e ADR-0020), `Admin` (usuários, chaves, motoristas, auditoria), `Jobs` (simulação e expurgo). Monólito modular: **nenhum serviço novo**.
@@ -85,7 +85,7 @@ Todos os instantes em `timestamptz`: na `master` desde a T-14.
 | `audit_events` | id, ocorrido_em, ator_tipo, ator_id, acao, alvo_tipo, alvo_id, detalhes jsonb (**sem dado pessoal**) | `(ocorrido_em DESC)` | não (só ids) |
 | `data_protection_keys` (0004) | id, friendly_name, xml | PK | não (segredo de sessão) |
 
-Retenção da telemetria: **24 h por padrão, com piso de 2 h** (H-12), por `FLEET_TELEMETRY_RETENTION_HOURS`. O expurgo também limpa a última posição em `vehicles` e mantém `last_signal_at` (ADR-0017). Na demo, preserva o último registro. Retenção da auditoria: não definida.
+Retenção da telemetria: **90 dias por padrão** (revisto em 2026-11-21; antes, 24 h), **com piso de 2 h** (H-12), por `FLEET_TELEMETRY_RETENTION_HOURS`. O expurgo também limpa a última posição em `vehicles` e mantém `last_signal_at` (ADR-0017). Na demo, preserva o último registro. Retenção da auditoria: não definida.
 
 ## Contratos (convenções da `v1`; o arquivo é gerado do código, ADR-0009)
 - Base `/api/v1`. Saúde em `/api/health` (`status`, `version`, `demo`, `setupPending`).
@@ -201,7 +201,7 @@ Os fluxos do mapa têm o threat model completo no ADR-0016. **Enquanto a T-21 n�
    - logo sem Inter 800 (a Plex vai até 700);
    - orçamento JS ≤ 300 KB e CSS ≤ 60 KB gzip*;
    - telemetria de instalação da IBM desligada.
-9. ~~Prazo de retenção (H-12)~~ decidido: 24 h, piso de 2 h. Fora daqui, por restrição do pedido: formato de rastreador de terceiros (H-16).
+9. ~~Prazo de retenção (H-12)~~ decidido: 24 h, piso de 2 h; **revisto em 2026-11-21 para 90 dias**, para permitir a análise posterior do trajeto. Fora daqui, por restrição do pedido: formato de rastreador de terceiros (H-16).
 10. ~~ADR-0017 a 0020, propostos~~ aceitos pelo humano em 2026-11-02, incluindo:
     - a página do veículo faz o mapa pedir ao provedor a região do trajeto automaticamente, e o aviso da T-61 será reescrito (ADR-0019);
     - `dueAt` e `situation` ficam visíveis para `frota:ler`, com a H-46 adiada (ADR-0020).

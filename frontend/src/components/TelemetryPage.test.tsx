@@ -16,7 +16,14 @@ vi.stubGlobal('ResizeObserver', MockResizeObserver)
 vi.mock('../api', () => ({
   api: {
     getTelemetry: vi.fn(),
+    getRoute: vi.fn().mockResolvedValue({ from: '', to: '', truncated: false, points: [] }),
   },
+}))
+
+vi.mock('./RouteMap', () => ({
+  default: ({ points }: { points: unknown[] }) => (
+    <div data-testid="route-map-mock">{points.length} pontos</div>
+  ),
 }))
 
 const mockVehicles: Vehicle[] = [
@@ -136,5 +143,73 @@ describe('TelemetryPage — LineCharts temáticos (T-80 / DS §5)', () => {
     const semDadoElements = await screen.findAllByText('sem dado')
     // 2 nos stat-cards (velocidade atual e combustível) + 2 na tabela de telemetria
     expect(semDadoElements.length).toBeGreaterThanOrEqual(4)
+  })
+})
+
+describe('TelemetryPage — trajeto do dia', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(api.getTelemetry).mockResolvedValue([])
+    vi.mocked(api.getRoute).mockResolvedValue({ from: '', to: '', truncated: false, points: [] })
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('pede o trajeto do dia inteiro e mostra o resumo e o mapa', async () => {
+    vi.mocked(api.getRoute).mockResolvedValue({
+      from: '',
+      to: '',
+      truncated: false,
+      points: [
+        {
+          latitude: -23.55,
+          longitude: -46.63,
+          speed: 40,
+          fuelLevel: 80,
+          recordedAt: '2026-10-31T12:00:00Z',
+        },
+        {
+          latitude: -23.56,
+          longitude: -46.63,
+          speed: 80,
+          fuelLevel: 79,
+          recordedAt: '2026-10-31T12:30:00Z',
+        },
+      ],
+    })
+
+    render(<TelemetryPage vehicles={mockVehicles} />)
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'v-1' } })
+
+    expect(await screen.findByTestId('route-map-mock')).toHaveProperty('textContent', '2 pontos')
+    const [, from, to] = vi.mocked(api.getRoute).mock.calls[0]
+    expect(new Date(to).getTime() - new Date(from).getTime()).toBeGreaterThanOrEqual(23 * 3600_000)
+    expect(screen.getByText('Distância percorrida')).toBeDefined()
+    expect(screen.getByText('80 km/h')).toBeDefined() // velocidade máxima
+    expect(screen.getByText('60 km/h')).toBeDefined() // velocidade média
+    expect(screen.getByText('30 min')).toBeDefined()
+  })
+
+  it('troca de dia pede o trajeto de novo', async () => {
+    render(<TelemetryPage vehicles={mockVehicles} />)
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'v-1' } })
+    await screen.findByText('Nenhuma posição registrada neste dia.')
+
+    fireEvent.change(screen.getByLabelText('Dia'), { target: { value: '2026-10-01' } })
+
+    await vi.waitFor(() => expect(api.getRoute).toHaveBeenCalledTimes(2))
+    const [, from] = vi.mocked(api.getRoute).mock.calls[1]
+    expect(new Date(from).getTime()).toBe(new Date(2026, 9, 1).getTime())
+  })
+
+  it('avisa quando o trajeto não carrega', async () => {
+    vi.mocked(api.getRoute).mockRejectedValue(new Error('HTTP 500'))
+
+    render(<TelemetryPage vehicles={mockVehicles} />)
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'v-1' } })
+
+    expect(await screen.findByRole('alert')).toBeDefined()
   })
 })

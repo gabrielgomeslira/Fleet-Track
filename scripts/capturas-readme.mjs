@@ -11,6 +11,7 @@
  *   CAPTURAS_NAVEGADOR      canal do Chromium para o Playwright (padrão "msedge"; use "chrome" se preferir)
  *   CAPTURAS_PLAYWRIGHT_DIR pasta com node_modules contendo playwright ou playwright-core, quando o
  *                           pacote não está instalado no projeto
+ *   CAPTURAS_ESCALA         densidade de pixels (padrão 1; use 2 para imagens nítidas fora do README)
  *
  * Regras:
  *   - Nunca roda na CI: encerra com erro se CI estiver definida, antes de abrir qualquer navegador.
@@ -50,6 +51,7 @@ const SAIDA = path.resolve(
   process.env.CAPTURAS_SAIDA || path.join(aqui, "..", "docs", "images"),
 );
 const CANAL = process.env.CAPTURAS_NAVEGADOR ?? "msedge";
+const ESCALA = Number(process.env.CAPTURAS_ESCALA) > 0 ? Number(process.env.CAPTURAS_ESCALA) : 1;
 
 async function carregarPlaywright() {
   const alvos = ["playwright", "playwright-core"];
@@ -272,7 +274,7 @@ async function main() {
     // Contexto novo por execução: sem cookies, sem cache e sem armazenamento anterior.
     const ctx = await navegador.newContext({
       viewport,
-      deviceScaleFactor: 1,
+      deviceScaleFactor: ESCALA,
       colorScheme: "light",
       locale: "pt-BR",
       timezoneId: "America/Sao_Paulo",
@@ -352,9 +354,29 @@ async function main() {
         .click();
     }
     await page.waitForSelector(".recharts-surface", { timeout: 15_000 });
+    // Trajeto do dia: espera o mapa desenhar o caminho e o fundo carregar.
+    await page.waitForSelector(".route-map canvas", { timeout: 15_000 });
+    await page.waitForFunction(
+      () => {
+        const m = window.__routeMap;
+        return Boolean(m && m.loaded() && m.getSource("trajeto"));
+      },
+      null,
+      { timeout: ESPERA_FUNDO_MS },
+    );
     await page.evaluate(() => document.fonts.ready);
     await page.waitForTimeout(1500); // animação dos gráficos (reducedMotion já reduz)
     await gravar(page, "telemetria.png");
+    const cartaoTrajeto = path.join(SAIDA, "trajeto.png");
+    await page.locator(".route-card").screenshot({ path: cartaoTrajeto, type: "png" });
+    console.log(`  gravado ${path.relative(process.cwd(), cartaoTrajeto)}`);
+    // Gráficos de velocidade e combustível, abaixo do trajeto.
+    await page.locator(".charts-row").first().evaluate((el) => {
+      el.scrollIntoView({ block: "start" });
+      window.scrollBy(0, -24);
+    });
+    await page.waitForTimeout(300);
+    await gravar(page, "telemetria-graficos.png");
     await ctxDesktop.close();
 
     // ---------- Mobile: Dashboard

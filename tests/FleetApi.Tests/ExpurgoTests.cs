@@ -365,7 +365,7 @@ public sealed class ExpurgoTests(DbFixture banco) : TesteComBanco(banco)
     public async Task Subida_da_api_registra_o_expurgo_e_ele_ja_roda_no_primeiro_ciclo()
     {
         var veiculo = await CriarVeiculoAsync("EXP-0012", ultimoSinal: DateTime.UtcNow);
-        await RegistrarAsync(veiculo.Id, DateTime.UtcNow.AddHours(-48), DateTime.UtcNow.AddHours(-1));
+        await RegistrarAsync(veiculo.Id, DateTime.UtcNow.AddDays(-100), DateTime.UtcNow.AddHours(-1));
 
         await using var fabrica = Banco.Factory.WithWebHostBuilder(b => b.UseSetting(ApiFactory.MantemExpurgo, "true"));
         using var cliente = fabrica.CreateClient();
@@ -397,7 +397,7 @@ public sealed class ExpurgoTests(DbFixture banco) : TesteComBanco(banco)
     }
 
     [Fact]
-    public async Task Subida_sem_a_variavel_usa_24_horas_e_nao_avisa()
+    public async Task Subida_sem_a_variavel_usa_90_dias_e_nao_avisa()
     {
         var captura = new CapturaLog();
         await using var fabrica = Banco.Factory.WithWebHostBuilder(b => b.ConfigureLogging(l => l.AddProvider(captura)));
@@ -406,6 +406,6 @@ public sealed class ExpurgoTests(DbFixture banco) : TesteComBanco(banco)
         (await cliente.GetAsync("/api/vehicles")).EnsureSuccessStatusCode();
 
         Assert.DoesNotContain(captura.Mensagens, m => m.Mensagem.Contains(Retencao.Variavel));
-        Assert.Equal(TimeSpan.FromHours(24), fabrica.Services.GetRequiredService<Retencao>().Prazo);
+        Assert.Equal(TimeSpan.FromDays(90), fabrica.Services.GetRequiredService<Retencao>().Prazo);
     }
 }
