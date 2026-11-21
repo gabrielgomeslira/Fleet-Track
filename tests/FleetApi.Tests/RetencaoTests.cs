@@ -16,11 +16,11 @@ public sealed class RetencaoTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public void Sem_a_variavel_o_padrao_e_de_24_horas(string? valor)
+    public void Sem_a_variavel_o_padrao_e_de_90_dias(string? valor)
     {
         var retencao = Retencao.Resolver(Config(valor));
 
-        Assert.Equal(TimeSpan.FromHours(24), retencao.Prazo);
+        Assert.Equal(TimeSpan.FromDays(90), retencao.Prazo);
         Assert.False(retencao.AbaixoDoPiso);
     }
 

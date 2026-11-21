@@ -38,6 +38,7 @@ Por padrão, o navegador de quem abre o FleetTrack baixa o mapa de fundo vetoria
 - **Mapa ao vivo:** cada veículo aparece no mapa com a cor do status (em rota, parado, manutenção).
 - **Entregas:** a lista completa com filtro por status (pendente, em trânsito, entregue, cancelado).
 - **Telemetria por veículo:** gráficos de velocidade e combustível ao longo do tempo e o histórico de posições.
+- **Trajeto do dia:** escolha um veículo e um dia para ver no mapa o caminho percorrido, com distância, duração e velocidades. A telemetria fica guardada por 90 dias (configurável).
 - **Dados de demonstração:** a instalação já vem com 10 veículos e 30 entregas, e a movimentação é simulada para você ver o painel funcionando na hora.
 
 ## Telas
@@ -68,9 +69,13 @@ Todas as entregas, com filtro por status.
 
 ### Telemetria
 
-Escolha um veículo para ver velocidade e combustível ao longo do tempo e os registros de posição.
+Escolha um veículo para ver o trajeto do dia no mapa, velocidade e combustível ao longo do tempo e os registros de posição.
 
 ![Telemetria](docs/images/telemetria.png)
+
+O trajeto de qualquer dia dentro da retenção, com o resumo da viagem:
+
+![Trajeto do dia](docs/images/trajeto.png)
 
 ## Como rodar
 
@@ -105,6 +110,7 @@ Para parar, use `docker compose down`. Para apagar também os dados, use `docker
 | `BACKEND_PORT` | Porta da API no seu computador | `5000` |
 | `FRONTEND_PORT` | Porta do painel no seu computador | `3000` |
 | `CONNECTION_STRING` | Conexão da API com o banco (usa as variáveis acima) | `Host=db;Port=5432;Database=fleetdb;Username=admin;Password=...` |
+| `FLEET_TELEMETRY_RETENTION_HOURS` | Por quanto tempo a telemetria fica guardada, em horas. Padrão: 2160 (90 dias) | `2160` |
 
 #### Mapa
 
@@ -158,6 +164,7 @@ Todas as rotas respondem JSON. Pelo painel, use `http://localhost:3000/api/...`.
 | GET | `/api/deliveries` | Lista as entregas (filtro: `?status=pendente\|em_transito\|entregue\|cancelado`) |
 | GET | `/api/deliveries/{id}` | Detalhes de uma entrega |
 | GET | `/api/telemetry/{vehicleId}` | Histórico de telemetria de um veículo |
+| GET | `/api/telemetry/{vehicleId}/route` | Trajeto num período, do ponto mais antigo ao mais novo (`?from=&to=` em ISO 8601, padrão últimas 24 h, até 7 dias) |
 | GET | `/api/dashboard/stats` | Números agregados do dashboard |
 
 Não há endpoint de simulação. No modo demo (`FLEET_DEMO_MODE=true`, padrão `false`), um job do backend move os veículos em rota a cada 30 s, ao longo do trajeto da entrega em andamento, e grava um registro de telemetria para todos os veículos.

@@ -46,3 +46,18 @@ export interface DashboardStats {
   deliveryRate: number
   deliveriesPerDay: { date: string; count: number }[]
 }
+
+export interface RoutePoint {
+  latitude: number
+  longitude: number
+  speed: number | null
+  fuelLevel: number | null
+  recordedAt: string
+}
+
+export interface VehicleRoute {
+  from: string
+  to: string
+  truncated: boolean
+  points: RoutePoint[]
+}

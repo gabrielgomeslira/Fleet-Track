@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
+import { SkeletonText } from '@carbon/react'
 import {
   LineChart,
   Line,
@@ -10,19 +11,60 @@ import {
 } from 'recharts'
 import { api } from '../api'
 import { formatarHora, formatarInstante, formatarPercentual, formatarVelocidade } from '../formatos'
-import type { Vehicle, TelemetryRecord } from '../types'
+import type { Vehicle, TelemetryRecord, VehicleRoute } from '../types'
+import { hojeLocal, periodoDoDia, resumoTrajeto } from './mapa/trajeto'
 import StatusBadge from './StatusBadge'
 import { useThemeTokens } from '../theme/useThemeTokens'
 import ChartTooltip from './charts/ChartTooltip'
 
+const RouteMap = lazy(() => import('./RouteMap'))
+
 interface Props {
   vehicles: Vehicle[]
+}
+
+const numeroKm = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 })
+
+function formatarDuracao(minutos: number): string {
+  const total = Math.round(minutos)
+  const horas = Math.floor(total / 60)
+  const resto = total % 60
+  return horas > 0 ? `${horas} h ${String(resto).padStart(2, '0')} min` : `${resto} min`
 }
 
 export default function TelemetryPage({ vehicles }: Props) {
   const tokens = useThemeTokens()
   const [selectedId, setSelectedId] = useState<string>('')
   const [records, setRecords] = useState<TelemetryRecord[]>([])
+  const [dia, setDia] = useState<string>(() => hojeLocal())
+  const [rota, setRota] = useState<VehicleRoute | null>(null)
+  const [erroRota, setErroRota] = useState(false)
+
+  useEffect(() => {
+    const periodo = periodoDoDia(dia)
+    if (!selectedId || !periodo) {
+      setRota(null)
+      return
+    }
+    let cancelado = false
+    setErroRota(false)
+    api
+      .getRoute(selectedId, periodo.from, periodo.to)
+      .then((r) => {
+        if (!cancelado) setRota(r)
+      })
+      .catch(() => {
+        if (!cancelado) {
+          setRota(null)
+          setErroRota(true)
+        }
+      })
+    return () => {
+      cancelado = true
+    }
+  }, [selectedId, dia])
+
+  const resumo = useMemo(() => (rota ? resumoTrajeto(rota.points) : null), [rota])
 
   useEffect(() => {
     if (!selectedId) {
@@ -88,6 +130,72 @@ export default function TelemetryPage({ vehicles }: Props) {
               <StatusBadge status={selected.status} />
             </span>
           </div>
+        </div>
+      )}
+
+      {selected && (
+        <div className="chart-card route-card" style={{ marginBottom: 16 }}>
+          <div className="route-card-header">
+            <h3>Trajeto do dia</h3>
+            <label className="route-day">
+              <span>Dia</span>
+              <input
+                type="date"
+                value={dia}
+                max={hojeLocal()}
+                onChange={(e) => setDia(e.target.value)}
+              />
+            </label>
+          </div>
+
+          {erroRota && (
+            <p className="route-empty" role="alert">
+              Não foi possível carregar o trajeto. Tente de novo em instantes.
+            </p>
+          )}
+
+          {rota && resumo && rota.points.length > 0 && (
+            <>
+              <div className="route-summary" aria-label="Resumo do trajeto">
+                <div>
+                  <span className="label">Distância percorrida</span>
+                  <span className="value">{numeroKm.format(resumo.distanciaKm)} km</span>
+                </div>
+                <div>
+                  <span className="label">Período</span>
+                  <span className="value">
+                    {formatarHora(resumo.inicio!, { hour: '2-digit', minute: '2-digit' })} às{' '}
+                    {formatarHora(resumo.fim!, { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                <div>
+                  <span className="label">Duração</span>
+                  <span className="value">{formatarDuracao(resumo.duracaoMin)}</span>
+                </div>
+                <div>
+                  <span className="label">Velocidade máxima</span>
+                  <span className="value">{formatarVelocidade(resumo.velocidadeMax)}</span>
+                </div>
+                <div>
+                  <span className="label">Velocidade média</span>
+                  <span className="value">{formatarVelocidade(resumo.velocidadeMedia)}</span>
+                </div>
+              </div>
+              {rota.truncated && (
+                <p className="route-empty">
+                  O dia tem mais posições do que o mapa mostra de uma vez: aparece só o começo do
+                  trajeto.
+                </p>
+              )}
+              <Suspense fallback={<SkeletonText paragraph lineCount={3} />}>
+                <RouteMap points={rota.points} />
+              </Suspense>
+            </>
+          )}
+
+          {rota && rota.points.length === 0 && (
+            <p className="route-empty">Nenhuma posição registrada neste dia.</p>
+          )}
         </div>
       )}
 
